@@ -1,9 +1,3 @@
-Server.default.options.device_("Scarlett 4i4 USB");
-
-Server.default.options.outDevice_("Blackhole 2ch"); //for use with Zoom audio
-
-ServerOptions.outDevices;
-
 (
 //server
 Server.default = Server.local;
