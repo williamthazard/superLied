@@ -8,103 +8,29 @@ Server.default.options.memSize_(2.pow(20));
 
 //words, words, words
 ~b = " ".ascii%32;
+~note = Array.fill(128, {0});
+~noted = Array.fill(128, {0});
+~player = Array.fill(128, {0});
+~a = Array.fill(128, {0});
 
-//grid
-~m = MonomeGrid.new(0);
+//default values for knob-controlled parameters
+~idim = Array.fill(128, {0});
+~idim[0]=0.42;
+~idim[1]=0.25;
+~idim[2]=0.88;
+~idim[3]=0.70;
+~idim[4]=0.63;
+~idim[5]=0.90;
+~idim[6]=0.10;
+~idim[7]=0.33;
+~idim[112]=0.20;
 
+//wait
 s.waitForBoot({
-	var draw;
-	~m.connect(0);
-	~step = Array.fill(~m.cols * ~m.rows, {0});
-	~note = Array.fill(~m.cols * ~m.rows, {0});
-	~noted = Array.fill(~m.cols * ~m.rows, {0});
-	~player = Array.fill(~m.cols * ~m.rows, {0});
-	~a = Array.fill(~m.cols * ~m.rows, {0});
-	~togs = Array.fill(4,{ arg k; 2*k+1});
-	~push = Array.fill(4, {arg k; 2*k});
-	for(0,4,{
-		arg y;
-		for(0,16,{
-			arg x; ~m.led(x,(2*y),4)
-		}
-		)
-	}
-	);
-	~m.key({ arg x,y,z;
-		var pos = x + (y*16);
-		if((z == 1) && (~togs.matchItem(y)), {
-			if(~step[pos] == 1,
-				{~step[pos] = 0;
-				~a[pos].stop},
-				{~step[pos] = 1;
-				~a[pos].play(quant:(~t*4))}
-			);
-			draw.value(x,y);
-		});
-		if (~push.matchItem(y), {
-			if(z == 1, {
-				~m.led(x,y,z*15);
-				if(pos > 15,
-					{~note[pos].source = PatternProxy(Pseq(~b.rotate(pos), inf));
-					~noted[pos] = ~note[pos].asStream},
-					{~b = ~historyproxy[pos].ascii%32;
-					AppClock.sched(0,{~entry_view.object = ~historyproxy[pos]});
-					AppClock.sched(0.5,{~entry_view.object = ""})}
-				);
-			},
-			{~m.led(x,y,4)}
-			);
-		});
-	});
-	draw = { arg x, y;
-			~m.led(x,y,~step[y*16+x] * 15);
-	};
 
-//midi
-MIDIClient.init;
-MIDIIn.connectAll;
-~idim = Array.fill(64, {0});
-~dimi = Array.fill(64, {0});
-MIDIdef.cc(\miid, {
-	arg val, num, chan, src;
-	for(0,63,{
-		arg i;
-		if((num == i) && (chan == 0),
-				{~idim[i] = val}
-			);
-	});
-	for(0,63,{
-		arg i;
-		if((num == i) && (chan == 5),
-				{~dimi[i] = val}
-			);
-		});
-}, chan: [0,5]);
-~mft = MIDIOut(1);
-~mft.control(0,0,42);
-~idim[0]=42;
-~mft.control(0,1,25);
-~idim[1]=25;
-~mft.control(0,2,88);
-~idim[2]=88;
-~mft.control(0,3,70);
-~idim[3]=70;
-~mft.control(0,12,100);
-~idim[12]=100;
-~mft.control(0,13,0);
-~idim[13]=0;
-~mft.control(0,14,0);
-~idim[14]=0;
-~mft.control(0,15,0);
-~idim[15]=0;
-~mft.control(0,16,63);
-~idim[16]=63;
-~mft.control(0,17,90);
-~idim[17]=90;
-~mft.control(0,18,110);
-~idim[18]=110;
 
 //gui
+	//text entry interface & background XY scope
 Window.closeAll;
 w = Window.new("superLied",Window.availableBounds)
 .background_(Color.black)
@@ -134,12 +60,12 @@ w = Window.new("superLied",Window.availableBounds)
 	.start;
 
 ~history_line_views = Array.fill(~num_history_lines,{
-		StaticText(w, (w.view.bounds.width/2-20)@~line_height).stringColor_(Color.grey).background_(Color.clear).font=~tnof
+		StaticText(w, (w.view.bounds.width/2-20)@~line_height).stringColor_(Color.new(1,1,1,0.5)).background_(Color.clear).font=~tnof
 });
 
 ~bodyView = HLayout(~history_line_views,~topScope);
 
-~entry_view = TextField(w, w.view.bounds.width@~line_height).background_(Color.new(red:1,green:1,blue:1,alpha:0.5)).font=~tnof;
+~entry_view = TextField(w, w.view.bounds.width@~line_height).background_(Color.new(1,1,1,0.5)).font=~tnof;
 
 ~history = LinkedList.new;
 ~num_history_lines.do({ ~history.add("") });
@@ -157,7 +83,200 @@ w = Window.new("superLied",Window.availableBounds)
 	~entry_view.string = "";
 };
 
-//synths & samplers
+	//knob & button interface
+k = Window("nested", Rect(
+	Window.availableBounds.width/2,
+	60,
+	Window.availableBounds.width/2,
+	Window.availableBounds.width/2),
+	border:false)
+.front
+.background_(Color.clear)
+.alwaysOnTop_(true);
+
+k.view.decorator_(FlowLayout(k.bounds,5@5,0@0));
+
+~comp = Array.fill(2, {
+	arg view;
+	view = CompositeView(k,k.bounds.width@(k.bounds.height/2))
+	.background_(Color.clear);
+
+	view.decorator_(FlowLayout(view.bounds,5@5,0@0));
+});
+
+	//knobs
+Array.fill(128,{ arg i = 0;
+	Knob(
+		~comp[0],
+		(k.bounds.width/16.9)@(k.bounds.width/16.9)
+).color_(
+		[
+			Color.new(1,1,1,0.5),
+			Color.new(1,1,1,0.5),
+			Color.new(0,0,0,0.5),
+			Color.new(0,0,0,0.5)
+		]
+		).value_(
+			~idim[i]
+		);
+		i = i + 1
+}
+);
+
+~comp[0].children[0].action_({arg obj; Pdefn(\0, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[1].action_({arg obj; Pdefn(\1, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[2].action_({arg obj; Pdefn(\2, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[3].action_({arg obj; Pdefn(\3, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[4].action_({arg obj; Pdefn(\4, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[5].action_({arg obj; Pdefn(\5, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[6].action_({arg obj; Pdefn(\6, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[7].action_({arg obj; Pdefn(\7, Pseq([obj.value.linlin(0,1,0,0.3)],inf))});
+~comp[0].children[112].action_({arg obj; Pdefn(\112, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[113].action_({arg obj; Pdefn(\113, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[114].action_({arg obj; Pdefn(\114, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[115].action_({arg obj; Pdefn(\115, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[116].action_({arg obj; Pdefn(\116, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+
+	//buttons
+4.do{(
+Array.fill(16,{
+	Button(
+		~comp[1],
+		(k.bounds.width/16.9)@(k.bounds.width/16.9)
+	).states_(
+		[
+		[ " ",
+			Color.new(1,1,1,0.5),
+			Color.new(1,1,1,0.5)
+		]
+		]
+	)
+}
+);
+
+Array.fill(16,{
+	Button(
+		~comp[1],
+		(k.bounds.width/16.9)@(k.bounds.width/16.9)
+	).states_(
+		[
+			[ " ",
+				Color.new(1,1,1,0.25),
+				Color.new(1,1,1,0.25)
+			],
+			[ " ",
+				Color.new(1,1,1,0.75),
+				Color.new(1,1,1,0.75)
+			]
+		]
+	).mouseDownAction_(
+		{
+			arg view;
+			if(view.value == 3)
+			{view.value = 1}
+		}
+	)
+}
+);
+)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i].mouseDownAction_({
+			~b = ~historyproxy[i].ascii%32;
+			AppClock.sched(0,{~entry_view.object = ~historyproxy[i]});
+			AppClock.sched(0.5,{~entry_view.object = ""})
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+16].mouseDownAction_({
+			arg view;
+			if(view.value == 3)
+			{view.value = 1};
+			if(view.value == 0,
+				{~a[i+16].play(quant:(~t*4))},
+				{~a[i+16].stop}
+			)
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+32].mouseDownAction_({
+			~note[i+32].source = PatternProxy(Pseq(~b.rotate(i+32), inf));
+			~noted[i+32] = ~note[i+32].asStream
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+48].mouseDownAction_({
+			arg view;
+			if(view.value == 3)
+			{view.value = 1};
+			if(view.value == 0,
+				{~a[i+48].play(quant:(~t*4))},
+				{~a[i+48].stop}
+			)
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+64].mouseDownAction_({
+			~note[i+64].source = PatternProxy(Pseq(~b.rotate(i+64), inf));
+			~noted[i+64] = ~note[i+64].asStream
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+80].mouseDownAction_({
+			arg view;
+			if(view.value == 3)
+			{view.value = 1};
+			if(view.value == 0,
+				{~a[i+80].play(quant:(~t*4))},
+				{~a[i+80].stop}
+			)
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+96].mouseDownAction_({
+			~note[i+96].source = PatternProxy(Pseq(~b.rotate(i+96), inf));
+			~noted[i+96] = ~note[i+96].asStream
+		}
+	)
+};
+
+16.do{
+		arg i;
+		~comp[1].children[i+112].mouseDownAction_({
+			arg view;
+			if(view.value == 3)
+			{view.value = 1};
+			if(view.value == 0,
+				{~a[i+112].play(quant:(~t*4))},
+				{~a[i+112].stop}
+			)
+		}
+	)
+};
+
+
+//samples go here! Change PathName to point to your own folder(s) of samples
+	//TIP: you can drag and drop a folder right into this window, and its pathname will show up where you drop it
 d = Dictionary.new;
 d.add(\l ->
 	PathName("/Users/spencerkingmangraham/Desktop/audio/606/").entries.collect({
@@ -225,6 +344,7 @@ d.add(\n ->
 );
 
 
+//samplers
 (
 SynthDef(\bufPlay, {
 	arg buf=[0,1],
@@ -315,6 +435,7 @@ s.sync;
 ).play;
 );
 
+//synths
 (
 SynthDef(\sine, {
 	arg freq=330,
@@ -479,7 +600,7 @@ SynthDef(\slideSaw, {
 		\rel, Pwhite(5,10, inf),
 		\amp, Pwhite(0.01,0.1, inf),
 		\pan, Pwhite(-0.8,0.8, inf),
-		\index, Pfunc{~idim[0].linlin(0,127,-24,24)},
+		\index, Pdefn(\0, Pseq([~idim[0].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([1, 2], inf),
 		\modeno, Pseq([2, 1, 4], inf),
 		\bus, ~fb.index
@@ -504,7 +625,7 @@ SynthDef(\slideSaw, {
 		\rel, Pseq([0.3, 0.48, 1], inf),
 		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
-		\index, Pfunc{~idim[1].linlin(0,127,-24,24)},
+		\index, Pdefn(\1, Pseq([~idim[1].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([1, 2, 4], inf),
 		\modeno, Pseq([2, 1], inf),
 		\bus, ~fb.index
@@ -529,7 +650,7 @@ SynthDef(\slideSaw, {
 		\rel, Pseq([0.3, 1.48, 1], inf),
 		\amp, Pseq([0.075, 0.1, 0.1, 0.095], inf),
 		\pan, Pseq([0.8, -0.8], inf),
-		\index, Pfunc{~idim[2].linlin(0,127,-24,24)},
+		\index, Pdefn(\2, Pseq([~idim[2].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([2, 4, 1], inf),
 		\modeno, Pseq([2, 1], inf),
 		\bus, ~fb.index
@@ -554,7 +675,7 @@ SynthDef(\slideSaw, {
 		\rel, Pseq([0.3, 0.48, 1], inf),
 		\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
-		\index, Pfunc{~idim[3].linlin(0,127,-24,24)},
+		\index, Pdefn(\3, Pseq([~idim[3].linlin(0,1,-24,24)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -575,7 +696,7 @@ SynthDef(\slideSaw, {
 		\gtranspose, -7,
 		\amp, Pseq([0.1, 0.2, 0.15, 0.1], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
-		\index, Pfunc{~idim[16].linlin(0,127,-24,24)},
+		\index, Pdefn(\4, Pseq([~idim[4].linlin(0,1,-24,24)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -594,9 +715,9 @@ SynthDef(\slideSaw, {
 		\stretch, (~t*4),
 		\note, ~note[37],
 		\gtranspose, -7,
-		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
-		\index, Pfunc{~idim[17].linlin(0,127,-24,24)},
+		\index, Pdefn(\5, Pseq([~idim[5].linlin(0,1,-24,24)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -615,9 +736,9 @@ SynthDef(\slideSaw, {
 		\stretch, (~t*4),
 		\note, ~note[38],
 		\gtranspose, -7,
-		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\amp, Pseq([0.5, 0.4, 0.6, 0.4], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
-		\index, Pfunc{~idim[18].linlin(0,127,-24,24)},
+		\index, Pdefn(\6, Pseq([~idim[6].linlin(0,1,-24,24)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -637,7 +758,7 @@ SynthDef(\slideSaw, {
 		\note, ~note[39],
 		\gtranspose, -7,
 		\legato, 1,
-		\freqlag, Pfunc{~idim[19].linlin(0,127,0,0.3)},
+		\freqlag, Pdefn(\7, Pseq([~idim[7].linlin(0,1,0,0.3)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -692,7 +813,7 @@ SynthDef(\slideSaw, {
     var delta, panner;
     loop {
         delta = ~t*4;
-		panner = ~noted[65].next.linlin(0,32,-1,1);
+		panner = ~noted[66].next.linlin(0,32,-1,1);
 		~player[48].set(\pan, panner);
         delta.yield;
     }
@@ -822,7 +943,7 @@ SynthDef(\slideSaw, {
 		\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
 		\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
 		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-		\cutoff, Pfunc{~idim[12].linlin(0,127,0,10000)},
+		\cutoff, Pdefn(\112, Pseq([~idim[112].linlin(0,1,0.1,10000)], inf)),
 		\bus, ~fb.index
 	);
 	)
@@ -840,7 +961,7 @@ SynthDef(\slideSaw, {
 		\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
 		\rate, Pseq([1], inf),
 		\bus, ~fb.index,
-		\cutoff, Pfunc{~idim[13].linlin(0,127,0,10000)}
+		\cutoff, Pdefn(\113, Pseq([~idim[113].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
 		)
@@ -857,7 +978,7 @@ SynthDef(\slideSaw, {
 		\buf, Prand(d[\zm], inf),
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\bus, ~fb.index,
-		\cutoff, Pfunc{~idim[14].linlin(0,127,0,10000)}
+		\cutoff, Pdefn(\114, Pseq([~idim[114].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
 		)
@@ -875,7 +996,7 @@ SynthDef(\slideSaw, {
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
 		\bus, ~fb.index,
-		\cutoff, Pfunc{~idim[15].linlin(0,127,0,10000)}
+		\cutoff, Pdefn(\115, Pseq([~idim[115].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
 		)
@@ -892,7 +1013,7 @@ SynthDef(\slideSaw, {
 		\buf, Prand(d[\zp], inf),
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\bus, ~fb.index,
-		\cutoff, Pfunc{~idim[15].linlin(0,127,0,10000)}
+		\cutoff, Pdefn(\116, Pseq([~idim[116].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
 		)
