@@ -1,3 +1,3 @@
 # superLied
 
-WIP Lied script for SuperCollider. This version will only work with a monome grid and midi fighter twister attached and with the monome grid library for SuperCollider installed.
+WIP Lied script for SuperCollider. Note that you'll have to load your own samples, in lines 278-329 in order for this to run properly.
