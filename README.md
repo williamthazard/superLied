@@ -12,4 +12,4 @@ Row 4: trigger sample playback. Samples will be cut up by the active line<br>
 Row 5: apply the active line (either the most-recently-entered one or the one you've recalled with row 1) to the sample immediately above<br>
 Row 6: currently unused<br>
 Row 7: currently unused<br>
-Row 8: trigger sample playback. These samples play in their entirety and are unaffected by the active line (so this row works nicely for drum patterns)
+Row 8: trigger sample playback. These samples play in their entirety and are unaffected by the active line (works nicely for drums)
