@@ -19,10 +19,60 @@ Server.default.options.memSize_(2.pow(20));
 ~idim[1]=0.25;
 ~idim[2]=0.88;
 ~idim[3]=0.70;
-~idim[4]=0.63;
-~idim[5]=0.90;
-~idim[6]=0.10;
+~idim[4]=0.4;
+~idim[5]=0.63;
+~idim[6]=0.70;
 ~idim[7]=0.33;
+~idim[8]=0.3;
+~idim[9]=0.55;
+~idim[10]=0.75;
+~idim[11]=0.45;
+~idim[12]=0.5;
+~idim[13]=0.1;
+~idim[14]=0.65;
+~idim[15]=0.75;
+~idim[21]=0.05;
+~idim[22]=0.15;
+~idim[23]=0.25;
+~idim[30]=0.15;
+~idim[31]=0.25;
+~idim[64]=0.42;
+~idim[65]=0.25;
+~idim[66]=0.88;
+~idim[67]=0.70;
+~idim[68]=0.4;
+~idim[69]=0.63;
+~idim[70]=0.70;
+~idim[71]=0.33;
+~idim[72]=0.3;
+~idim[73]=0.55;
+~idim[74]=0.75;
+~idim[75]=0.45;
+~idim[76]=0.5;
+~idim[77]=0.1;
+~idim[78]=0.65;
+~idim[79]=0.75;
+~idim[85]=0.05;
+~idim[86]=0.15;
+~idim[87]=0.25;
+~idim[94]=0.15;
+~idim[95]=0.25;
+~idim[96]=0.25;
+~idim[97]=0.25;
+~idim[98]=0.25;
+~idim[99]=0.25;
+~idim[100]=0.25;
+~idim[101]=0.25;
+~idim[102]=0.25;
+~idim[103]=0.25;
+~idim[104]=0.25;
+~idim[105]=0.25;
+~idim[106]=0.25;
+~idim[107]=0.25;
+~idim[108]=0.25;
+~idim[109]=0.25;
+~idim[110]=0.25;
+~idim[111]=0.25;
 ~idim[112]=0.20;
 
 //wait
@@ -130,11 +180,94 @@ Array.fill(128,{ arg i = 0;
 ~comp[0].children[5].action_({arg obj; Pdefn(\5, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
 ~comp[0].children[6].action_({arg obj; Pdefn(\6, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
 ~comp[0].children[7].action_({arg obj; Pdefn(\7, Pseq([obj.value.linlin(0,1,0,0.3)],inf))});
+~comp[0].children[8].action_({arg obj; Pdefn(\8, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[9].action_({arg obj; Pdefn(\9, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[10].action_({arg obj; Pdefn(\10, Pseq([obj.value.linlin(0,1,0.01,10)],inf))});
+~comp[0].children[11].action_({arg obj; Pdefn(\11, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[12].action_({arg obj; Pdefn(\12, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[13].action_({arg obj; Pdefn(\13, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[14].action_({arg obj; Pdefn(\14, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[15].action_({arg obj; Pdefn(\15, Pseq([obj.value.linlin(0,1,0,0.3)],inf))});
+~comp[0].children[16].action_({arg obj; Pdefn(\16, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[17].action_({arg obj; Pdefn(\17, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[18].action_({arg obj; Pdefn(\18, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[19].action_({arg obj; Pdefn(\19, Pseq([obj.value.linlin(0,1,0.001,3)],inf))});
+~comp[0].children[20].action_({arg obj; Pdefn(\20, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[21].action_({arg obj; Pdefn(\21, Pseq([obj.value],inf))});
+~comp[0].children[22].action_({arg obj; Pdefn(\22, Pseq([obj.value],inf))});
+~comp[0].children[23].action_({arg obj; Pdefn(\23, Pseq([obj.value.linlin(0,1,100,4000)],inf))});
+~comp[0].children[24].action_({arg obj; Pdefn(\24, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[25].action_({arg obj; Pdefn(\25, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[26].action_({arg obj; Pdefn(\26, Pseq([obj.value.linlin(0,1,0.01,10)],inf))});
+~comp[0].children[27].action_({arg obj; Pdefn(\27, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[28].action_({arg obj; Pdefn(\28, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[29].action_({arg obj; Pdefn(\29, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[30].action_({arg obj; Pdefn(\30, Pseq([obj.value],inf))});
+~comp[0].children[31].action_({arg obj; Pdefn(\31, Pseq([obj.value.linlin(0,1,100,4000)],inf))});
+~comp[0].children[64].action_({arg obj; Pdefn(\64, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[65].action_({arg obj; Pdefn(\65, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[66].action_({arg obj; Pdefn(\66, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[67].action_({arg obj; Pdefn(\67, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[68].action_({arg obj; Pdefn(\68, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[69].action_({arg obj; Pdefn(\69, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[70].action_({arg obj; Pdefn(\70, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[71].action_({arg obj; Pdefn(\71, Pseq([obj.value.linlin(0,1,0,0.3)],inf))});
+~comp[0].children[72].action_({arg obj; Pdefn(\72, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[73].action_({arg obj; Pdefn(\73, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[74].action_({arg obj; Pdefn(\74, Pseq([obj.value.linlin(0,1,0.01,10)],inf))});
+~comp[0].children[75].action_({arg obj; Pdefn(\75, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[76].action_({arg obj; Pdefn(\76, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[77].action_({arg obj; Pdefn(\77, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[78].action_({arg obj; Pdefn(\78, Pseq([obj.value.linlin(0,1,-24,24)],inf))});
+~comp[0].children[79].action_({arg obj; Pdefn(\79, Pseq([obj.value.linlin(0,1,0,0.3)],inf))});
+~comp[0].children[80].action_({arg obj; Pdefn(\80, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[81].action_({arg obj; Pdefn(\81, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[82].action_({arg obj; Pdefn(\82, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[83].action_({arg obj; Pdefn(\83, Pseq([obj.value.linlin(0,1,0.001,3)],inf))});
+~comp[0].children[84].action_({arg obj; Pdefn(\84, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[85].action_({arg obj; Pdefn(\85, Pseq([obj.value],inf))});
+~comp[0].children[86].action_({arg obj; Pdefn(\86, Pseq([obj.value],inf))});
+~comp[0].children[87].action_({arg obj; Pdefn(\87, Pseq([obj.value.linlin(0,1,100,4000)],inf))});
+~comp[0].children[88].action_({arg obj; Pdefn(\88, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[89].action_({arg obj; Pdefn(\89, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[90].action_({arg obj; Pdefn(\90, Pseq([obj.value.linlin(0,1,0.01,10)],inf))});
+~comp[0].children[91].action_({arg obj; Pdefn(\91, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[92].action_({arg obj; Pdefn(\92, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[93].action_({arg obj; Pdefn(\93, Pseq([obj.value.linlin(0,1,1,4)],inf))});
+~comp[0].children[94].action_({arg obj; Pdefn(\94, Pseq([obj.value],inf))});
+~comp[0].children[95].action_({arg obj; Pdefn(\95, Pseq([obj.value.linlin(0,1,100,4000)],inf))});
+~comp[0].children[96].action_({arg obj; Pdefn(\96, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[97].action_({arg obj; Pdefn(\97, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[98].action_({arg obj; Pdefn(\98, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[99].action_({arg obj; Pdefn(\99, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[100].action_({arg obj; Pdefn(\100, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[101].action_({arg obj; Pdefn(\101, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[102].action_({arg obj; Pdefn(\102, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[103].action_({arg obj; Pdefn(\103, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[104].action_({arg obj; Pdefn(\104, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[105].action_({arg obj; Pdefn(\105, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[106].action_({arg obj; Pdefn(\106, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[107].action_({arg obj; Pdefn(\107, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[108].action_({arg obj; Pdefn(\108, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[109].action_({arg obj; Pdefn(\109, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[110].action_({arg obj; Pdefn(\110, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[111].action_({arg obj; Pdefn(\111, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 ~comp[0].children[112].action_({arg obj; Pdefn(\112, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 ~comp[0].children[113].action_({arg obj; Pdefn(\113, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 ~comp[0].children[114].action_({arg obj; Pdefn(\114, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 ~comp[0].children[115].action_({arg obj; Pdefn(\115, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 ~comp[0].children[116].action_({arg obj; Pdefn(\116, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[117].action_({arg obj; Pdefn(\117, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[118].action_({arg obj; Pdefn(\118, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[119].action_({arg obj; Pdefn(\119, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[120].action_({arg obj; Pdefn(\120, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[121].action_({arg obj; Pdefn(\121, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[122].action_({arg obj; Pdefn(\122, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[123].action_({arg obj; Pdefn(\123, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[124].action_({arg obj; Pdefn(\124, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[125].action_({arg obj; Pdefn(\125, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[126].action_({arg obj; Pdefn(\126, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
+~comp[0].children[127].action_({arg obj; Pdefn(\127, Pseq([obj.value.linlin(0,1,0.1,10000)],inf))});
 
 	//buttons
 4.do{(
@@ -349,9 +482,10 @@ SynthDef(\bufPlay, {
 		rate=1,
 		amp=1,
 		cutoff=1200,
+		cutoff2=1200,
 		bus=~fb.index;
 	var sig;
-	sig = HPF.ar(PlayBuf.ar(1, buf, BufRateScale.ir(buf) * rate, doneAction:2),cutoff);
+	sig = RLPF.ar(HPF.ar(PlayBuf.ar(1, buf, BufRateScale.ir(buf) * rate, doneAction:2),cutoff),cutoff2,0.25);
 	sig = sig * amp;
 	Out.ar(
 		bus,
@@ -426,7 +560,7 @@ SynthDef(\PlayBufPlayer, {
 	Out.ar(bus,sig)
 }).play(s, [\out, 0]);
 s.sync;
-3.do({arg i=0;
+6.do({arg i=0;
 	~player.put(48+i, Synth(\PlayBufPlayer, [\bufnum, d[\n][i]]));
 });
 }
@@ -600,7 +734,7 @@ SynthDef(\slideSaw, {
 		\pan, Pwhite(-0.8,0.8, inf),
 		\index, Pdefn(\0, Pseq([~idim[0].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([1, 2], inf),
-		\modeno, Pseq([2, 1, 4], inf),
+		\modeno, Pdefn(\16, Pseq([~idim[16].linlin(0,1,1,4)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -615,7 +749,7 @@ SynthDef(\slideSaw, {
 	\sinepat,
 	Pbind(
 		\instrument, \sinsin,
-		\dur, Pseq([Pseq([1/8],6), 1/4, Pseq([1/16],16)], inf),
+		\dur, Pseq([1/8], inf),
 		\stretch, (~t*4),
 		\note, ~note[33],
 		\gtranspose, -7,
@@ -625,7 +759,7 @@ SynthDef(\slideSaw, {
 		\pan, Pseq([-0.8, 0.8], inf),
 		\index, Pdefn(\1, Pseq([~idim[1].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([1, 2, 4], inf),
-		\modeno, Pseq([2, 1], inf),
+		\modeno, Pdefn(\17, Pseq([~idim[17].linlin(0,1,1,4)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -650,7 +784,7 @@ SynthDef(\slideSaw, {
 		\pan, Pseq([0.8, -0.8], inf),
 		\index, Pdefn(\2, Pseq([~idim[2].linlin(0,1,-24,24)], inf)),
 		\modnum, Pseq([2, 4, 1], inf),
-		\modeno, Pseq([2, 1], inf),
+		\modeno, Pdefn(\18, Pseq([~idim[18].linlin(0,1,1,4)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -670,7 +804,7 @@ SynthDef(\slideSaw, {
 		\note, ~note[35],
 		\gtranspose, -7,
 		\atk, Pseq([0.005, 0.007, 0.01], inf),
-		\rel, Pseq([0.3, 0.48, 1], inf),
+		\rel, Pdefn(\19, Pseq([~idim[19].linlin(0,1,0.001,3)], inf)),
 		\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\index, Pdefn(\3, Pseq([~idim[3].linlin(0,1,-24,24)], inf)),
@@ -695,6 +829,8 @@ SynthDef(\slideSaw, {
 		\amp, Pseq([0.1, 0.2, 0.15, 0.1], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\index, Pdefn(\4, Pseq([~idim[4].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([2, 4, 1], inf),
+		\modeno, Pdefn(\20, Pseq([~idim[20].linlin(0,1,1,4)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -716,6 +852,7 @@ SynthDef(\slideSaw, {
 		\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\index, Pdefn(\5, Pseq([~idim[5].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\21, Pseq([~idim[21]], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -737,6 +874,7 @@ SynthDef(\slideSaw, {
 		\amp, Pseq([0.5, 0.4, 0.6, 0.4], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\index, Pdefn(\6, Pseq([~idim[6].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\22, Pseq([~idim[22]], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -751,12 +889,201 @@ SynthDef(\slideSaw, {
 	\slider,
 	PmonoArtic(
 		\slideSaw,
-		\dur, Pseq([1/4, 1/4, 1/8, 1/16, 1/16, 1/8, 1/8], inf),
+		\dur, Pseq([1/8], inf),
 		\stretch, (~t*4),
 		\note, ~note[39],
 		\gtranspose, -7,
 		\legato, 1,
 		\freqlag, Pdefn(\7, Pseq([~idim[7].linlin(0,1,0,0.3)], inf)),
+		\ffreq, Pdefn(\23, Pseq([~idim[23].linlin(0,1,100,4000)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(40,
+	PatternProxy(Pseq(~b.rotate(8), inf)));
+~a.put(24,
+	Pdef(
+	\sinepat3,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([Pseq([1/8],6), 1/4, Pseq([1/16],16)], inf),
+		\stretch, (~t*4),
+		\note, ~note[40],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\8, Pseq([~idim[8].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\24, Pseq([~idim[24].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(41,
+	PatternProxy(Pseq(~b.rotate(9), inf)));
+~a.put(25,
+	Pdef(
+	\anotherdrone,
+	Pbind(
+		\instrument, \trisin,
+		\dur, Pwhite(0.05,0.5, inf),
+		\stretch, (~t*4),
+		\note, ~note[41],
+		\gtranspose, -12,
+		\atk, Pwhite(2,3, inf),
+		\rel, Pwhite(5,10, inf),
+		\amp, Pwhite(0.01,0.1, inf),
+		\pan, Pwhite(-0.8,0.8, inf),
+		\index, Pdefn(\9, Pseq([~idim[9].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2], inf),
+		\modeno, Pdefn(\25, Pseq([~idim[25].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(42,
+	PatternProxy(Pseq(~b.rotate(10), inf)));
+~a.put(26,
+	Pdef(
+	\sinepat4,
+	Pbind(
+		\instrument, \sine,
+		\dur, Pseq([1/(~note[42]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[42],
+		\gtranspose, -7,
+		\atk, Pdefn(\10, Pseq([~idim[10].linlin(0,1,0.01,10)], inf)),
+		\rel, Pdefn(\26, Pseq([~idim[26].linlin(0,1,0.01,10)], inf)),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(43,
+	PatternProxy(Pseq(~b.rotate(11), inf)));
+~a.put(27,
+	Pdef(
+	\sinepat5,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([1/(~note[43]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[43],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\11, Pseq([~idim[11].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\27, Pseq([~idim[27].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(44,
+	PatternProxy(Pseq(~b.rotate(12), inf)));
+~a.put(28,
+	Pdef(
+	\sinepat6,
+	Pbind(
+		\instrument, \trisin,
+		\dur, Pseq([1/(~note[44]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[44],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\12, Pseq([~idim[12].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\28, Pseq([~idim[28].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(45,
+	PatternProxy(Pseq(~b.rotate(13), inf)));
+~a.put(29,
+	Pdef(
+	\phrase2,
+	Pbind(
+		\instrument, \ringer,
+		\dur, Pseq([1/(~note[45]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[45],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pdefn(\29, Pseq([~idim[29].linlin(0,1,1,4)], inf)),
+		\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\13, Pseq([~idim[13].linlin(0,1,-24,24)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(46,
+	PatternProxy(Pseq(~b.rotate(14), inf)));
+~a.put(30,
+	Pdef(
+	\trey2,
+	Pbind(
+		\instrument, \karplu,
+		\dur, Pseq([1/(~note[46]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[46],
+		\gtranspose, -7,
+		\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\14, Pseq([~idim[14].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\30, Pseq([~idim[30]], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(47,
+	PatternProxy(Pseq(~b.rotate(15), inf)));
+~a.put(31,
+	Pdef(
+	\slider2,
+	PmonoArtic(
+		\slideSaw,
+		\dur, Pseq([1/(~note[47]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[47],
+		\gtranspose, -7,
+		\legato, 1,
+		\freqlag, Pdefn(\15, Pseq([~idim[15].linlin(0,1,0,0.3)], inf)),
+		\ffreq, Pdefn(\31, Pseq([~idim[31].linlin(0,1,100,4000)], inf)),
 		\bus, ~fb.index
 	);
 	).quant_(~t*4)
@@ -764,14 +1091,15 @@ SynthDef(\slideSaw, {
 );
 
 	//bank 2
+	//sample 1
 (
 ~note.put(64,
-	PatternProxy(Pseq(~b.rotate(8), inf)));
+	PatternProxy(Pseq(~b.rotate(16), inf)));
 ~noted.put(64,
 	~note[64].asStream);
 ~a.put(48,
 	Task({
-    var delta, starter, ender;
+    var delta, starter, ender, cutoff, cutoff2;
     loop {
         delta = ~t*4;
 		starter = ~noted[64].next.linlin(0,32,0,1);
@@ -785,7 +1113,7 @@ SynthDef(\slideSaw, {
 
 (
 ~note.put(65,
-	PatternProxy(Pseq(~b.rotate(9), inf)));
+	PatternProxy(Pseq(~b.rotate(17), inf)));
 ~noted.put(65,
 	~note[65].asStream);
 ~a.put(49,
@@ -803,7 +1131,7 @@ SynthDef(\slideSaw, {
 
 (
 ~note.put(66,
-	PatternProxy(Pseq(~b.rotate(10), inf)));
+	PatternProxy(Pseq(~b.rotate(18), inf)));
 ~noted.put(66,
 	~note[66].asStream);
 ~a.put(50,
@@ -819,9 +1147,10 @@ SynthDef(\slideSaw, {
 )
 );
 
+	//sample 2
 (
 ~note.put(67,
-	PatternProxy(Pseq(~b.rotate(11), inf)));
+	PatternProxy(Pseq(~b.rotate(19), inf)));
 ~noted.put(67,
 	~note[67].asStream);
 ~a.put(51,
@@ -840,7 +1169,7 @@ SynthDef(\slideSaw, {
 
 (
 ~note.put(68,
-	PatternProxy(Pseq(~b.rotate(12), inf)));
+	PatternProxy(Pseq(~b.rotate(20), inf)));
 ~noted.put(68,
 	~note[68].asStream);
 ~a.put(52,
@@ -858,7 +1187,7 @@ SynthDef(\slideSaw, {
 
 (
 ~note.put(69,
-	PatternProxy(Pseq(~b.rotate(13), inf)));
+	PatternProxy(Pseq(~b.rotate(21), inf)));
 ~noted.put(69,
 	~note[69].asStream);
 ~a.put(53,
@@ -874,9 +1203,10 @@ SynthDef(\slideSaw, {
 )
 );
 
+	//sample 3
 (
 ~note.put(70,
-	PatternProxy(Pseq(~b.rotate(14), inf)));
+	PatternProxy(Pseq(~b.rotate(22), inf)));
 ~noted.put(70,
 	~note[70].asStream);
 ~a.put(54,
@@ -895,7 +1225,7 @@ SynthDef(\slideSaw, {
 
 (
 ~note.put(71,
-	PatternProxy(Pseq(~b.rotate(15), inf)));
+	PatternProxy(Pseq(~b.rotate(23), inf)));
 ~noted.put(71,
 	~note[71].asStream);
 ~a.put(55,
@@ -911,21 +1241,528 @@ SynthDef(\slideSaw, {
 )
 );
 
+	//sample 4
 (
 ~note.put(72,
-	PatternProxy(Pseq(~b.rotate(16), inf)));
+	PatternProxy(Pseq(~b.rotate(24), inf)));
 ~noted.put(72,
 	~note[72].asStream);
 ~a.put(56,
 	Task({
-    var delta, panner;
+    var delta, starter, ender;
     loop {
         delta = ~t*4;
-		panner = ~noted[72].next.linlin(0,32,-1,1);
-		~player[50].set(\pan, panner);
+		starter = ~noted[72].next.linlin(0,32,0,1);
+		ender = starter+0.01;
+		~player[51].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
         delta.yield;
     }
 })
+)
+);
+
+(
+~note.put(73,
+	PatternProxy(Pseq(~b.rotate(25), inf)));
+~noted.put(73,
+	~note[73].asStream);
+~a.put(57,
+	Task({
+    var delta, scaledtime;
+    loop {
+        delta = ~t*4;
+		scaledtime = ~noted[73].next.linlin(0,32,-2,2);
+		~player[51].set(\rate, scaledtime);
+        delta.yield;
+    }
+})
+)
+);
+
+(
+~note.put(74,
+	PatternProxy(Pseq(~b.rotate(26), inf)));
+~noted.put(74,
+	~note[74].asStream);
+~a.put(58,
+	Task({
+    var delta, panner;
+    loop {
+        delta = ~t*4;
+		panner = ~noted[74].next.linlin(0,32,-1,1);
+		~player[51].set(\pan, panner);
+        delta.yield;
+    }
+})
+)
+);
+
+	//sample 5
+(
+~note.put(75,
+	PatternProxy(Pseq(~b.rotate(27), inf)));
+~noted.put(75,
+	~note[75].asStream);
+~a.put(59,
+	Task({
+    var delta, starter, ender;
+    loop {
+        delta = ~t*4;
+		starter = ~noted[75].next.linlin(0,32,0,1);
+		ender = starter+0.01;
+		~player[52].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
+        delta.yield;
+    }
+})
+)
+);
+
+(
+~note.put(76,
+	PatternProxy(Pseq(~b.rotate(28), inf)));
+~noted.put(76,
+	~note[76].asStream);
+~a.put(60,
+	Task({
+    var delta, scaledtime;
+    loop {
+        delta = ~t*4;
+		scaledtime = ~noted[76].next.linlin(0,32,-2,2);
+		~player[52].set(\rate, scaledtime);
+        delta.yield;
+    }
+})
+)
+);
+
+(
+~note.put(77,
+	PatternProxy(Pseq(~b.rotate(29), inf)));
+~noted.put(77,
+	~note[77].asStream);
+~a.put(61,
+	Task({
+    var delta, panner;
+    loop {
+        delta = ~t*4;
+		panner = ~noted[77].next.linlin(0,32,-1,1);
+		~player[52].set(\pan, panner);
+        delta.yield;
+    }
+})
+)
+);
+
+	//sample 6
+(
+~note.put(78,
+	PatternProxy(Pseq(~b.rotate(30), inf)));
+~noted.put(78,
+	~note[78].asStream);
+~a.put(62,
+	Task({
+    var delta, starter, ender;
+    loop {
+        delta = ~t*4;
+		starter = ~noted[78].next.linlin(0,32,0,1);
+		ender = starter+0.06;
+		~player[53].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.7,\bus,~fb.index);
+        delta.yield;
+    }
+})
+)
+);
+
+(
+~note.put(79,
+	PatternProxy(Pseq(~b.rotate(31), inf)));
+~noted.put(79,
+	~note[79].asStream);
+~a.put(63,
+	Task({
+    var delta, scaledtime;
+    loop {
+        delta = ~t*4;
+		scaledtime = ~noted[79].next.linlin(0,32,-2,2);
+		~player[53].set(\rate, scaledtime);
+        delta.yield;
+    }
+})
+)
+);
+
+	//bank 3
+(
+~note.put(96,
+	PatternProxy(Pseq(~b.rotate(32), inf)));
+~a.put(80,
+	Pdef(
+	\Adrone,
+	Pbind(
+		\instrument, \trisin,
+		\dur, Pwhite(0.05,0.5, inf),
+		\stretch, (~t*4),
+		\note, ~note[96],
+		\gtranspose, -19,
+		\atk, Pwhite(2,3, inf),
+		\rel, Pwhite(5,10, inf),
+		\amp, Pwhite(0.01,0.1, inf),
+		\pan, Pwhite(-0.8,0.8, inf),
+		\index, Pdefn(\64, Pseq([~idim[64].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2], inf),
+		\modeno, Pdefn(\80, Pseq([~idim[80].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(97,
+	PatternProxy(Pseq(~b.rotate(33), inf)));
+~a.put(81,
+	Pdef(
+	\Asinepat,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([1/8], inf),
+		\stretch, (~t*4),
+		\note, ~note[97],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\65, Pseq([~idim[65].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\81, Pseq([~idim[81].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(98,
+	PatternProxy(Pseq(~b.rotate(34), inf)));
+~a.put(82,
+	Pdef(
+	\Asinepat2,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([1/2], inf),
+		\stretch, (~t*4),
+		\note, ~note[98],
+		\gtranspose, -12,
+		\atk, Pseq([0.005, 0.007, 0.25], inf),
+		\rel, Pseq([0.3, 1.48, 1], inf),
+		\amp, Pseq([0.075, 0.1, 0.1, 0.095], inf),
+		\pan, Pseq([0.8, -0.8], inf),
+		\index, Pdefn(\66, Pseq([~idim[66].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([2, 4, 1], inf),
+		\modeno, Pdefn(\82, Pseq([~idim[82].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(99,
+	PatternProxy(Pseq(~b.rotate(35), inf)));
+~a.put(83,
+	Pdef(
+	\Aphrase,
+	Pbind(
+		\instrument, \ringer,
+		\dur, Pseq([1/4,1/8,1/8], inf),
+		\stretch, (~t*4),
+		\note, ~note[99],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pdefn(\67, Pseq([~idim[67].linlin(0,1,0.001,3)], inf)),
+		\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\83, Pseq([~idim[83].linlin(0,1,-24,24)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(100,
+	PatternProxy(Pseq(~b.rotate(36), inf)));
+~a.put(84,
+	Pdef(
+	\Asixteener,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([1/16], inf),
+		\stretch, (~t*4),
+		\note, ~note[100],
+		\gtranspose, -7,
+		\amp, Pseq([0.1, 0.2, 0.15, 0.1], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\68, Pseq([~idim[68].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([2, 4, 1], inf),
+		\modeno, Pdefn(\84, Pseq([~idim[84].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(101,
+	PatternProxy(Pseq(~b.rotate(37), inf)));
+~a.put(85,
+	Pdef(
+	\Atrey,
+	Pbind(
+		\instrument, \karplu,
+		\dur, Pseq([1/3], inf),
+		\stretch, (~t*4),
+		\note, ~note[101],
+		\gtranspose, -7,
+		\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\69, Pseq([~idim[69].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\85, Pseq([~idim[85]], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(102,
+	PatternProxy(Pseq(~b.rotate(38), inf)));
+~a.put(86,
+	Pdef(
+	\Afear,
+	Pbind(
+		\instrument, \karplu,
+		\dur, Pseq([1/4], inf),
+		\stretch, (~t*4),
+		\note, ~note[102],
+		\gtranspose, -7,
+		\amp, Pseq([0.5, 0.4, 0.6, 0.4], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\70, Pseq([~idim[70].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\86, Pseq([~idim[86]], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(103,
+	PatternProxy(Pseq(~b.rotate(39), inf)));
+~a.put(87,
+	Pdef(
+	\Aslider,
+	PmonoArtic(
+		\slideSaw,
+		\dur, Pseq([1/8], inf),
+		\stretch, (~t*4),
+		\note, ~note[103],
+		\gtranspose, -7,
+		\legato, 1,
+		\freqlag, Pdefn(\71, Pseq([~idim[71].linlin(0,1,0,0.3)], inf)),
+		\ffreq, Pdefn(\87, Pseq([~idim[87].linlin(0,1,100,4000)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(104,
+	PatternProxy(Pseq(~b.rotate(40), inf)));
+~a.put(88,
+	Pdef(
+	\Asinepat3,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([Pseq([1/8],6), 1/4, Pseq([1/16],16)], inf),
+		\stretch, (~t*4),
+		\note, ~note[104],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\72, Pseq([~idim[72].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\88, Pseq([~idim[88].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(105,
+	PatternProxy(Pseq(~b.rotate(41), inf)));
+~a.put(89,
+	Pdef(
+	\Aanotherdrone,
+	Pbind(
+		\instrument, \trisin,
+		\dur, Pwhite(0.05,0.5, inf),
+		\stretch, (~t*4),
+		\note, ~note[105],
+		\gtranspose, -12,
+		\atk, Pwhite(2,3, inf),
+		\rel, Pwhite(5,10, inf),
+		\amp, Pwhite(0.01,0.1, inf),
+		\pan, Pwhite(-0.8,0.8, inf),
+		\index, Pdefn(\73, Pseq([~idim[73].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2], inf),
+		\modeno, Pdefn(\89, Pseq([~idim[89].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(106,
+	PatternProxy(Pseq(~b.rotate(42), inf)));
+~a.put(90,
+	Pdef(
+	\Asinepat4,
+	Pbind(
+		\instrument, \sine,
+		\dur, Pseq([1/(~note[106]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[106],
+		\gtranspose, -7,
+		\atk, Pdefn(\74, Pseq([~idim[74].linlin(0,1,0.01,10)], inf)),
+		\rel, Pdefn(\90, Pseq([~idim[90].linlin(0,1,0.01,10)], inf)),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(107,
+	PatternProxy(Pseq(~b.rotate(43), inf)));
+~a.put(91,
+	Pdef(
+	\Asinepat5,
+	Pbind(
+		\instrument, \sinsin,
+		\dur, Pseq([1/(~note[107]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[107],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\75, Pseq([~idim[75].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\91, Pseq([~idim[91].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(108,
+	PatternProxy(Pseq(~b.rotate(44), inf)));
+~a.put(92,
+	Pdef(
+	\Asinepat6,
+	Pbind(
+		\instrument, \trisin,
+		\dur, Pseq([1/(~note[108]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[108],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pseq([0.3, 0.48, 1], inf),
+		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\76, Pseq([~idim[76].linlin(0,1,-24,24)], inf)),
+		\modnum, Pseq([1, 2, 4], inf),
+		\modeno, Pdefn(\92, Pseq([~idim[92].linlin(0,1,1,4)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(109,
+	PatternProxy(Pseq(~b.rotate(45), inf)));
+~a.put(93,
+	Pdef(
+	\Aphrase2,
+	Pbind(
+		\instrument, \ringer,
+		\dur, Pseq([1/(~note[109]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[109],
+		\gtranspose, -7,
+		\atk, Pseq([0.005, 0.007, 0.01], inf),
+		\rel, Pdefn(\93, Pseq([~idim[93].linlin(0,1,1,4)], inf)),
+		\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\77, Pseq([~idim[77].linlin(0,1,-24,24)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(110,
+	PatternProxy(Pseq(~b.rotate(46), inf)));
+~a.put(94,
+	Pdef(
+	\Atrey2,
+	Pbind(
+		\instrument, \karplu,
+		\dur, Pseq([1/(~note[110]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[110],
+		\gtranspose, -7,
+		\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
+		\pan, Pseq([-0.8, 0.8], inf),
+		\index, Pdefn(\78, Pseq([~idim[78].linlin(0,1,-24,24)], inf)),
+		\coef, Pdefn(\94, Pseq([~idim[94]], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
+)
+);
+
+(
+~note.put(111,
+	PatternProxy(Pseq(~b.rotate(47), inf)));
+~a.put(95,
+	Pdef(
+	\Aslider2,
+	PmonoArtic(
+		\slideSaw,
+		\dur, Pseq([1/(~note[111]+1)],inf),
+		\stretch, (~t*4),
+		\note, ~note[111],
+		\gtranspose, -7,
+		\legato, 1,
+		\freqlag, Pdefn(\79, Pseq([~idim[79].linlin(0,1,0,0.3)], inf)),
+		\ffreq, Pdefn(\95, Pseq([~idim[95].linlin(0,1,100,4000)], inf)),
+		\bus, ~fb.index
+	);
+	).quant_(~t*4)
 )
 );
 
@@ -941,6 +1778,7 @@ SynthDef(\slideSaw, {
 		\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
 		\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
 		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
+		\cutoff2, Pdefn(\96, Pseq([~idim[96].linlin(0,1,0.1,10000)], inf)),
 		\cutoff, Pdefn(\112, Pseq([~idim[112].linlin(0,1,0.1,10000)], inf)),
 		\bus, ~fb.index
 	);
@@ -959,6 +1797,7 @@ SynthDef(\slideSaw, {
 		\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
 		\rate, Pseq([1], inf),
 		\bus, ~fb.index,
+		\cutoff2, Pdefn(\97, Pseq([~idim[97].linlin(0,1,0.1,10000)], inf)),
 		\cutoff, Pdefn(\113, Pseq([~idim[113].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
@@ -976,6 +1815,7 @@ SynthDef(\slideSaw, {
 		\buf, Prand(d[\zm], inf),
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\bus, ~fb.index,
+		\cutoff2, Pdefn(\98, Pseq([~idim[98].linlin(0,1,0.1,10000)], inf)),
 		\cutoff, Pdefn(\114, Pseq([~idim[114].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
@@ -994,6 +1834,7 @@ SynthDef(\slideSaw, {
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
 		\bus, ~fb.index,
+		\cutoff2, Pdefn(\99, Pseq([~idim[99].linlin(0,1,0.1,10000)], inf)),
 		\cutoff, Pdefn(\115, Pseq([~idim[115].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
@@ -1011,7 +1852,210 @@ SynthDef(\slideSaw, {
 		\buf, Prand(d[\zp], inf),
 		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
 		\bus, ~fb.index,
+		\cutoff2, Pdefn(\100, Pseq([~idim[100].linlin(0,1,0.1,10000)], inf)),
 		\cutoff, Pdefn(\116, Pseq([~idim[116].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(117,
+	Pdef(
+	\rhythm,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/8], inf),
+		\stretch, (~t*4),
+		\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
+		\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
+		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
+		\cutoff2, Pdefn(\101, Pseq([~idim[101].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\117, Pseq([~idim[117].linlin(0,1,0.1,10000)], inf)),
+		\bus, ~fb.index
+	);
+	)
+)
+);
+
+(
+~a.put(118,
+	Pdef(
+	\kicksnare,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/2], inf),
+		\stretch, (~t*4),
+		\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
+		\rate, Pseq([1], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\102, Pseq([~idim[102].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\118, Pseq([~idim[118].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(119,
+	Pdef(
+	\metals,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zm], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\103, Pseq([~idim[103].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\119, Pseq([~idim[119].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(120,
+	Pdef(
+	\percs,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zp], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\104, Pseq([~idim[104].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\120, Pseq([~idim[120].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(121,
+	Pdef(
+	\altmetal,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zp], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\105, Pseq([~idim[105].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\121, Pseq([~idim[121].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(122,
+	Pdef(
+	\rhythm,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/8], inf),
+		\stretch, (~t*4),
+		\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
+		\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
+		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
+		\cutoff2, Pdefn(\106, Pseq([~idim[106].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\122, Pseq([~idim[122].linlin(0,1,0.1,10000)], inf)),
+		\bus, ~fb.index
+	);
+	)
+)
+);
+
+(
+~a.put(123,
+	Pdef(
+	\kicksnare,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/2], inf),
+		\stretch, (~t*4),
+		\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
+		\rate, Pseq([1], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\107, Pseq([~idim[107].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\123, Pseq([~idim[123].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(124,
+	Pdef(
+	\metals,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zm], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\108, Pseq([~idim[108].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\124, Pseq([~idim[124].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(125,
+	Pdef(
+	\percs,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zp], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\109, Pseq([~idim[109].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\125, Pseq([~idim[125].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(126,
+	Pdef(
+	\altmetal,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zp], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\110, Pseq([~idim[110].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\126, Pseq([~idim[126].linlin(0,1,0.1,10000)], inf)),
+				);
+			).quant_(~t*4)
+		)
+	);
+
+(
+~a.put(127,
+	Pdef(
+	\altmetal,
+	Pbind(
+		\instrument, \bufPlay,
+		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
+		\stretch, (~t*4),
+		\buf, Prand(d[\zp], inf),
+		\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
+		\bus, ~fb.index,
+		\cutoff2, Pdefn(\111, Pseq([~idim[111].linlin(0,1,0.1,10000)], inf)),
+		\cutoff, Pdefn(\127, Pseq([~idim[127].linlin(0,1,0.1,10000)], inf)),
 				);
 			).quant_(~t*4)
 		)
