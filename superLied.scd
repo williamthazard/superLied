@@ -1862,7 +1862,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(117,
 	Pdef(
-	\rhythm,
+	\rhythm1,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/8], inf),
@@ -1881,7 +1881,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(118,
 	Pdef(
-	\kicksnare,
+	\kicksnare1,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/2], inf),
@@ -1899,7 +1899,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(119,
 	Pdef(
-	\metals,
+	\metals1,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
@@ -1917,7 +1917,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(120,
 	Pdef(
-	\percs,
+	\percs1,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16], inf),
@@ -1936,7 +1936,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(121,
 	Pdef(
-	\altmetal,
+	\altmetal1,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
@@ -1954,7 +1954,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(122,
 	Pdef(
-	\rhythm,
+	\rhythm2,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/8], inf),
@@ -1973,7 +1973,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(123,
 	Pdef(
-	\kicksnare,
+	\kicksnare2,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/2], inf),
@@ -1991,7 +1991,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(124,
 	Pdef(
-	\metals,
+	\metals2,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
@@ -2009,7 +2009,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(125,
 	Pdef(
-	\percs,
+	\percs2,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16], inf),
@@ -2028,7 +2028,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(126,
 	Pdef(
-	\altmetal,
+	\altmetal2,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
@@ -2046,7 +2046,7 @@ SynthDef(\slideSaw, {
 (
 ~a.put(127,
 	Pdef(
-	\altmetal,
+	\altmetal3,
 	Pbind(
 		\instrument, \bufPlay,
 		\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
