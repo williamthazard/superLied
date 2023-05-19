@@ -31,6 +31,11 @@ Server.default.options.memSize_(2.pow(20));
 ~idim[13]=0.1;
 ~idim[14]=0.65;
 ~idim[15]=0.75;
+~idim[16]=0;
+~idim[17]=0;
+~idim[18]=0;
+~idim[19]=0;
+~idim[20]=0;
 ~idim[21]=0.05;
 ~idim[22]=0.15;
 ~idim[23]=0.25;
@@ -966,7 +971,7 @@ SynthDef(\slideSaw, {
 		\gtranspose, -7,
 		\atk, Pdefn(\10, Pseq([~idim[10].linlin(0,1,0.01,10)], inf)),
 		\rel, Pdefn(\26, Pseq([~idim[26].linlin(0,1,0.01,10)], inf)),
-		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\amp, Pseq([0.02, 0.07, 0.03, 0.05], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\bus, ~fb.index
 	);
@@ -1077,10 +1082,10 @@ SynthDef(\slideSaw, {
 	\slider2,
 	PmonoArtic(
 		\slideSaw,
-		\dur, Pseq([1/(~note[47]+1)],inf),
+		\dur, Pseq([(1/(~note[47]+1))*8],inf),
 		\stretch, (~t*4),
 		\note, ~note[47],
-		\gtranspose, -7,
+		\gtranspose, -19,
 		\legato, 1,
 		\freqlag, Pdefn(\15, Pseq([~idim[15].linlin(0,1,0,0.3)], inf)),
 		\ffreq, Pdefn(\31, Pseq([~idim[31].linlin(0,1,100,4000)], inf)),
@@ -1642,7 +1647,7 @@ SynthDef(\slideSaw, {
 		\gtranspose, -7,
 		\atk, Pdefn(\74, Pseq([~idim[74].linlin(0,1,0.01,10)], inf)),
 		\rel, Pdefn(\90, Pseq([~idim[90].linlin(0,1,0.01,10)], inf)),
-		\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+		\amp, Pseq([0.02, 0.07, 0.03, 0.05], inf),
 		\pan, Pseq([-0.8, 0.8], inf),
 		\bus, ~fb.index
 	);
@@ -1753,10 +1758,10 @@ SynthDef(\slideSaw, {
 	\Aslider2,
 	PmonoArtic(
 		\slideSaw,
-		\dur, Pseq([1/(~note[111]+1)],inf),
+		\dur, Pseq([(1/(~note[111]+1))*8],inf),
 		\stretch, (~t*4),
 		\note, ~note[111],
-		\gtranspose, -7,
+		\gtranspose, -12,
 		\legato, 1,
 		\freqlag, Pdefn(\79, Pseq([~idim[79].linlin(0,1,0,0.3)], inf)),
 		\ffreq, Pdefn(\95, Pseq([~idim[95].linlin(0,1,100,4000)], inf)),
