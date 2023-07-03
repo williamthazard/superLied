@@ -3,10 +3,6 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(20));
-//o.outDevice_("SONY TV");
-//o.numInputBusChannels_(0);
-//ServerOptions.devices;
-//o.device_("EPSON PJ");
 
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
