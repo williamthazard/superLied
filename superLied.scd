@@ -3,6 +3,10 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(20));
+//o.outDevice_("SONY TV");
+//o.numInputBusChannels_(0);
+//ServerOptions.devices;
+//o.device_("EPSON PJ");
 
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
@@ -1421,873 +1425,868 @@ s.waitForBoot({
 	AppClock
 	).start;
 
-	if(
-		MIDIClient.destinations.asString.contains("Midi Fighter Twister") == false,
+	~comp[0].children[0].action_(
 		{
-			~comp[0].children[0].action_(
-				{
-					arg obj;
-					Pdefn(
-						\0,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[1].action_(
-				{
-					arg obj;
-					Pdefn(
-						\1,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[2].action_(
-				{
-					arg obj;
-					Pdefn(
-						\2,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[3].action_(
-				{
-					arg obj;
-					Pdefn(
-						\3,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[4].action_(
-				{
-					arg obj;
-					Pdefn(
-						\4,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[5].action_(
-				{
-					arg obj;
-					Pdefn(
-						\5,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[6].action_(
-				{
-					arg obj;
-					Pdefn(
-						\6,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[7].action_(
-				{
-					arg obj;
-					Pdefn(
-						\7,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[8].action_(
-				{
-					arg obj;
-					Pdefn(
-						\8,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[9].action_(
-				{
-					arg obj;
-					Pdefn(
-						\9,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[10].action_(
-				{
-					arg obj;
-					Pdefn(
-						\10,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[11].action_(
-				{
-					arg obj;
-					Pdefn(
-						\11,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[12].action_(
-				{
-					arg obj;
-					Pdefn(
-						\12,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[13].action_(
-				{
-					arg obj;
-					Pdefn(
-						\13,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[14].action_(
-				{
-					arg obj;
-					Pdefn(
-						\14,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[15].action_(
-				{
-					arg obj;
-					Pdefn(
-						\15,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[16].action_(
-				{
-					arg obj;
-					Pdefn(
-						\16,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[17].action_(
-				{
-					arg obj;
-					Pdefn(
-						\17,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[18].action_(
-				{
-					arg obj;
-					Pdefn(
-						\18,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[19].action_(
-				{
-					arg obj;
-					Pdefn(
-						\19,
-						Pseq([obj.value.linlin(0,1,0,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[20].action_(
-				{
-					arg obj;
-					Pdefn(
-						\20,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[21].action_(
-				{
-					arg obj;
-					Pdefn(
-						\21,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[22].action_(
-				{
-					arg obj;
-					Pdefn(
-						\22,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[23].action_(
-				{
-					arg obj;
-					Pdefn(
-						\23,
-						Pseq([obj.value.linlin(0,1,100,4000)],inf)
-					)
-				}
-			);
-			~comp[0].children[24].action_(
-				{
-					arg obj;
-					Pdefn(
-						\24,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[25].action_(
-				{
-					arg obj;
-					Pdefn(
-						\25,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[26].action_(
-				{
-					arg obj;
-					Pdefn(
-						\26,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[27].action_(
-				{
-					arg obj;
-					Pdefn(
-						\27,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[28].action_(
-				{
-					arg obj;
-					Pdefn(
-						\28,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[29].action_(
-				{
-					arg obj;
-					Pdefn(
-						\29,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[30].action_(
-				{
-					arg obj;
-					Pdefn(
-						\30,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[31].action_(
-				{
-					arg obj;
-					Pdefn(
-						\31,
-						Pseq([obj.value.linlin(0,1,100,4000)],inf)
-					)
-				}
-			);
-			~comp[0].children[64].action_(
-				{
-					arg obj;
-					Pdefn(
-						\64,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[65].action_(
-				{
-					arg obj;
-					Pdefn(
-						\65,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[66].action_(
-				{
-					arg obj;
-					Pdefn(
-						\66,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[67].action_(
-				{
-					arg obj;
-					Pdefn(
-						\67,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[68].action_(
-				{
-					arg obj;
-					Pdefn(
-						\68,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[69].action_(
-				{
-					arg obj;
-					Pdefn(
-						\69,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[70].action_(
-				{
-					arg obj;
-					Pdefn(
-						\70,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[71].action_(
-				{
-					arg obj;
-					Pdefn(
-						\71,
-						Pseq([obj.value.linlin(0,1,0,0.3)],inf)
-					)
-				}
-			);
-			~comp[0].children[72].action_(
-				{
-					arg obj;
-					Pdefn(
-						\72,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[73].action_(
-				{
-					arg obj;
-					Pdefn(
-						\73,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[74].action_(
-				{
-					arg obj;
-					Pdefn(
-						\74,
-						Pseq([obj.value.linlin(0,1,0.01,10)],inf)
-					)
-				}
-			);
-			~comp[0].children[75].action_(
-				{
-					arg obj;
-					Pdefn(
-						\75,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[76].action_(
-				{
-					arg obj;
-					Pdefn(
-						\76,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[77].action_(
-				{
-					arg obj;
-					Pdefn(
-						\77,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[78].action_(
-				{
-					arg obj;
-					Pdefn(
-						\78,
-						Pseq([obj.value.linlin(0,1,-24,24)],inf)
-					)
-				}
-			);
-			~comp[0].children[79].action_(
-				{
-					arg obj;
-					Pdefn(
-						\79,
-						Pseq([obj.value.linlin(0,1,0,0.3)],inf)
-					)
-				}
-			);
-			~comp[0].children[80].action_(
-				{
-					arg obj;
-					Pdefn(
-						\80,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[81].action_(
-				{
-					arg obj;
-					Pdefn(
-						\81,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[82].action_(
-				{
-					arg obj;
-					Pdefn(
-						\82,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[83].action_(
-				{
-					arg obj;
-					Pdefn(
-						\83,
-						Pseq([obj.value.linlin(0,1,0.001,3)],inf)
-					)
-				}
-			);
-			~comp[0].children[84].action_(
-				{
-					arg obj;
-					Pdefn(
-						\84,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[85].action_(
-				{
-					arg obj;
-					Pdefn(
-						\85,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[86].action_(
-				{
-					arg obj;
-					Pdefn(
-						\86,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[87].action_(
-				{
-					arg obj;
-					Pdefn(
-						\87,
-						Pseq([obj.value.linlin(0,1,100,4000)],inf)
-					)
-				}
-			);
-			~comp[0].children[88].action_(
-				{
-					arg obj;
-					Pdefn(
-						\88,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[89].action_(
-				{
-					arg obj;
-					Pdefn(
-						\89,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[90].action_(
-				{
-					arg obj;
-					Pdefn(
-						\90,
-						Pseq([obj.value.linlin(0,1,0.01,10)],inf)
-					)
-				}
-			);
-			~comp[0].children[91].action_(
-				{
-					arg obj;
-					Pdefn(
-						\91,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[92].action_(
-				{
-					arg obj;
-					Pdefn(
-						\92,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[93].action_(
-				{
-					arg obj;
-					Pdefn(
-						\93,
-						Pseq([obj.value.linlin(0,1,1,4)],inf)
-					)
-				}
-			);
-			~comp[0].children[94].action_(
-				{
-					arg obj;
-					Pdefn(
-						\94,
-						Pseq([obj.value],inf)
-					)
-				}
-			);
-			~comp[0].children[95].action_(
-				{
-					arg obj;
-					Pdefn(
-						\95,
-						Pseq([obj.value.linlin(0,1,100,4000)],inf)
-					)
-				}
-			);
-			~comp[0].children[96].action_(
-				{
-					arg obj;
-					Pdefn(
-						\96,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[97].action_(
-				{
-					arg obj;
-					Pdefn(
-						\97,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[98].action_(
-				{
-					arg obj;
-					Pdefn(
-						\98,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[99].action_(
-				{
-					arg obj;
-					Pdefn(
-						\99,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[100].action_(
-				{
-					arg obj;
-					Pdefn(
-						\100,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[101].action_(
-				{
-					arg obj;
-					Pdefn(
-						\101,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[102].action_(
-				{
-					arg obj;
-					Pdefn(
-						\102,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[103].action_(
-				{
-					arg obj;
-					Pdefn(
-						\103,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[104].action_(
-				{
-					arg obj;
-					Pdefn(
-						\104,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[105].action_(
-				{
-					arg obj;
-					Pdefn(
-						\105,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[106].action_(
-				{
-					arg obj;
-					Pdefn(
-						\106,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[107].action_(
-				{
-					arg obj;
-					Pdefn(
-						\107,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[108].action_(
-				{
-					arg obj;
-					Pdefn(
-						\108,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[109].action_(
-				{
-					arg obj;
-					Pdefn(
-						\109,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[110].action_(
-				{
-					arg obj;
-					Pdefn(
-						\110,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[111].action_(
-				{
-					arg obj;
-					Pdefn(
-						\111,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[112].action_(
-				{
-					arg obj;
-					Pdefn(
-						\112,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[113].action_(
-				{
-					arg obj;
-					Pdefn(
-						\113,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[114].action_(
-				{
-					arg obj;
-					Pdefn(
-						\114,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[115].action_(
-				{
-					arg obj;
-					Pdefn(
-						\115,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[116].action_(
-				{
-					arg obj;
-					Pdefn(
-						\116,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[117].action_(
-				{
-					arg obj;
-					Pdefn(
-						\117,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[118].action_(
-				{
-					arg obj;
-					Pdefn(
-						\118,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[119].action_(
-				{
-					arg obj;
-					Pdefn(
-						\119,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[120].action_(
-				{
-					arg obj;
-					Pdefn(
-						\120,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[121].action_(
-				{
-					arg obj;
-					Pdefn(
-						\121,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[122].action_(
-				{
-					arg obj;
-					Pdefn(
-						\122,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[123].action_(
-				{
-					arg obj;
-					Pdefn(
-						\123,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[124].action_(
-				{
-					arg obj;
-					Pdefn(
-						\124,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[125].action_(
-				{
-					arg obj;
-					Pdefn(
-						\125,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[126].action_(
-				{
-					arg obj;
-					Pdefn(
-						\126,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
-			~comp[0].children[127].action_(
-				{
-					arg obj;
-					Pdefn(
-						\127,
-						Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
-					)
-				}
-			);
+			arg obj;
+			Pdefn(
+				\0,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[1].action_(
+		{
+			arg obj;
+			Pdefn(
+				\1,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[2].action_(
+		{
+			arg obj;
+			Pdefn(
+				\2,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[3].action_(
+		{
+			arg obj;
+			Pdefn(
+				\3,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[4].action_(
+		{
+			arg obj;
+			Pdefn(
+				\4,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[5].action_(
+		{
+			arg obj;
+			Pdefn(
+				\5,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[6].action_(
+		{
+			arg obj;
+			Pdefn(
+				\6,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[7].action_(
+		{
+			arg obj;
+			Pdefn(
+				\7,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[8].action_(
+		{
+			arg obj;
+			Pdefn(
+				\8,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[9].action_(
+		{
+			arg obj;
+			Pdefn(
+				\9,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[10].action_(
+		{
+			arg obj;
+			Pdefn(
+				\10,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[11].action_(
+		{
+			arg obj;
+			Pdefn(
+				\11,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[12].action_(
+		{
+			arg obj;
+			Pdefn(
+				\12,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[13].action_(
+		{
+			arg obj;
+			Pdefn(
+				\13,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[14].action_(
+		{
+			arg obj;
+			Pdefn(
+				\14,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[15].action_(
+		{
+			arg obj;
+			Pdefn(
+				\15,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[16].action_(
+		{
+			arg obj;
+			Pdefn(
+				\16,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[17].action_(
+		{
+			arg obj;
+			Pdefn(
+				\17,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[18].action_(
+		{
+			arg obj;
+			Pdefn(
+				\18,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[19].action_(
+		{
+			arg obj;
+			Pdefn(
+				\19,
+				Pseq([obj.value.linlin(0,1,0,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[20].action_(
+		{
+			arg obj;
+			Pdefn(
+				\20,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[21].action_(
+		{
+			arg obj;
+			Pdefn(
+				\21,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[22].action_(
+		{
+			arg obj;
+			Pdefn(
+				\22,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[23].action_(
+		{
+			arg obj;
+			Pdefn(
+				\23,
+				Pseq([obj.value.linlin(0,1,100,4000)],inf)
+			)
+		}
+	);
+	~comp[0].children[24].action_(
+		{
+			arg obj;
+			Pdefn(
+				\24,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[25].action_(
+		{
+			arg obj;
+			Pdefn(
+				\25,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[26].action_(
+		{
+			arg obj;
+			Pdefn(
+				\26,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[27].action_(
+		{
+			arg obj;
+			Pdefn(
+				\27,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[28].action_(
+		{
+			arg obj;
+			Pdefn(
+				\28,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[29].action_(
+		{
+			arg obj;
+			Pdefn(
+				\29,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[30].action_(
+		{
+			arg obj;
+			Pdefn(
+				\30,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[31].action_(
+		{
+			arg obj;
+			Pdefn(
+				\31,
+				Pseq([obj.value.linlin(0,1,100,4000)],inf)
+			)
+		}
+	);
+	~comp[0].children[64].action_(
+		{
+			arg obj;
+			Pdefn(
+				\64,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[65].action_(
+		{
+			arg obj;
+			Pdefn(
+				\65,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[66].action_(
+		{
+			arg obj;
+			Pdefn(
+				\66,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[67].action_(
+		{
+			arg obj;
+			Pdefn(
+				\67,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[68].action_(
+		{
+			arg obj;
+			Pdefn(
+				\68,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[69].action_(
+		{
+			arg obj;
+			Pdefn(
+				\69,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[70].action_(
+		{
+			arg obj;
+			Pdefn(
+				\70,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[71].action_(
+		{
+			arg obj;
+			Pdefn(
+				\71,
+				Pseq([obj.value.linlin(0,1,0,0.3)],inf)
+			)
+		}
+	);
+	~comp[0].children[72].action_(
+		{
+			arg obj;
+			Pdefn(
+				\72,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[73].action_(
+		{
+			arg obj;
+			Pdefn(
+				\73,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[74].action_(
+		{
+			arg obj;
+			Pdefn(
+				\74,
+				Pseq([obj.value.linlin(0,1,0.01,10)],inf)
+			)
+		}
+	);
+	~comp[0].children[75].action_(
+		{
+			arg obj;
+			Pdefn(
+				\75,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[76].action_(
+		{
+			arg obj;
+			Pdefn(
+				\76,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[77].action_(
+		{
+			arg obj;
+			Pdefn(
+				\77,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[78].action_(
+		{
+			arg obj;
+			Pdefn(
+				\78,
+				Pseq([obj.value.linlin(0,1,-24,24)],inf)
+			)
+		}
+	);
+	~comp[0].children[79].action_(
+		{
+			arg obj;
+			Pdefn(
+				\79,
+				Pseq([obj.value.linlin(0,1,0,0.3)],inf)
+			)
+		}
+	);
+	~comp[0].children[80].action_(
+		{
+			arg obj;
+			Pdefn(
+				\80,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[81].action_(
+		{
+			arg obj;
+			Pdefn(
+				\81,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[82].action_(
+		{
+			arg obj;
+			Pdefn(
+				\82,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[83].action_(
+		{
+			arg obj;
+			Pdefn(
+				\83,
+				Pseq([obj.value.linlin(0,1,0.001,3)],inf)
+			)
+		}
+	);
+	~comp[0].children[84].action_(
+		{
+			arg obj;
+			Pdefn(
+				\84,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[85].action_(
+		{
+			arg obj;
+			Pdefn(
+				\85,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[86].action_(
+		{
+			arg obj;
+			Pdefn(
+				\86,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[87].action_(
+		{
+			arg obj;
+			Pdefn(
+				\87,
+				Pseq([obj.value.linlin(0,1,100,4000)],inf)
+			)
+		}
+	);
+	~comp[0].children[88].action_(
+		{
+			arg obj;
+			Pdefn(
+				\88,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[89].action_(
+		{
+			arg obj;
+			Pdefn(
+				\89,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[90].action_(
+		{
+			arg obj;
+			Pdefn(
+				\90,
+				Pseq([obj.value.linlin(0,1,0.01,10)],inf)
+			)
+		}
+	);
+	~comp[0].children[91].action_(
+		{
+			arg obj;
+			Pdefn(
+				\91,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[92].action_(
+		{
+			arg obj;
+			Pdefn(
+				\92,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[93].action_(
+		{
+			arg obj;
+			Pdefn(
+				\93,
+				Pseq([obj.value.linlin(0,1,1,4)],inf)
+			)
+		}
+	);
+	~comp[0].children[94].action_(
+		{
+			arg obj;
+			Pdefn(
+				\94,
+				Pseq([obj.value],inf)
+			)
+		}
+	);
+	~comp[0].children[95].action_(
+		{
+			arg obj;
+			Pdefn(
+				\95,
+				Pseq([obj.value.linlin(0,1,100,4000)],inf)
+			)
+		}
+	);
+	~comp[0].children[96].action_(
+		{
+			arg obj;
+			Pdefn(
+				\96,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[97].action_(
+		{
+			arg obj;
+			Pdefn(
+				\97,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[98].action_(
+		{
+			arg obj;
+			Pdefn(
+				\98,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[99].action_(
+		{
+			arg obj;
+			Pdefn(
+				\99,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[100].action_(
+		{
+			arg obj;
+			Pdefn(
+				\100,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[101].action_(
+		{
+			arg obj;
+			Pdefn(
+				\101,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[102].action_(
+		{
+			arg obj;
+			Pdefn(
+				\102,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[103].action_(
+		{
+			arg obj;
+			Pdefn(
+				\103,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[104].action_(
+		{
+			arg obj;
+			Pdefn(
+				\104,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[105].action_(
+		{
+			arg obj;
+			Pdefn(
+				\105,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[106].action_(
+		{
+			arg obj;
+			Pdefn(
+				\106,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[107].action_(
+		{
+			arg obj;
+			Pdefn(
+				\107,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[108].action_(
+		{
+			arg obj;
+			Pdefn(
+				\108,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[109].action_(
+		{
+			arg obj;
+			Pdefn(
+				\109,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[110].action_(
+		{
+			arg obj;
+			Pdefn(
+				\110,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[111].action_(
+		{
+			arg obj;
+			Pdefn(
+				\111,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[112].action_(
+		{
+			arg obj;
+			Pdefn(
+				\112,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[113].action_(
+		{
+			arg obj;
+			Pdefn(
+				\113,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[114].action_(
+		{
+			arg obj;
+			Pdefn(
+				\114,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[115].action_(
+		{
+			arg obj;
+			Pdefn(
+				\115,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[116].action_(
+		{
+			arg obj;
+			Pdefn(
+				\116,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[117].action_(
+		{
+			arg obj;
+			Pdefn(
+				\117,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[118].action_(
+		{
+			arg obj;
+			Pdefn(
+				\118,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[119].action_(
+		{
+			arg obj;
+			Pdefn(
+				\119,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[120].action_(
+		{
+			arg obj;
+			Pdefn(
+				\120,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[121].action_(
+		{
+			arg obj;
+			Pdefn(
+				\121,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[122].action_(
+		{
+			arg obj;
+			Pdefn(
+				\122,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[123].action_(
+		{
+			arg obj;
+			Pdefn(
+				\123,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[124].action_(
+		{
+			arg obj;
+			Pdefn(
+				\124,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[125].action_(
+		{
+			arg obj;
+			Pdefn(
+				\125,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[126].action_(
+		{
+			arg obj;
+			Pdefn(
+				\126,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
+		}
+	);
+	~comp[0].children[127].action_(
+		{
+			arg obj;
+			Pdefn(
+				\127,
+				Pseq([obj.value.linlin(0,1,0.1,10000)],inf)
+			)
 		}
 	);
 
