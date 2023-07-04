@@ -47,11 +47,13 @@ if(
 						~step[pos] == 1,
 						{
 							~step[pos] = 0;
-							~a[pos].stop
+							~a[pos].stop;
+							AppClock.sched(0,{~comp[1].children[pos].value_(0)})
 						},
 						{
 							~step[pos] = 1;
-							~a[pos].play(quant:(~t*4))
+							~a[pos].play(quant:(~t*4));
+							AppClock.sched(0,{~comp[1].children[pos].value_(1)})
 						}
 					);
 					draw.value(x,y);
@@ -416,16 +418,27 @@ s.waitForBoot({
 					view.value == 3,
 					{
 						view.value = 1
-
 					}
 				);
 				if(
 					view.value == 0,
 					{
-						~a[i+16].play(quant:(~t*4))
+						~a[i+16].play(quant:(~t*4));
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,1,15)
+						}
 					},
 					{
-						~a[i+16].stop
+						~a[i+16].stop;
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,1,0)
+						}
 					}
 				)
 			}
@@ -456,10 +469,22 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+48].play(quant:(~t*4))
+						~a[i+48].play(quant:(~t*4));
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,3,15)
+						}
 					},
 					{
-						~a[i+48].stop
+						~a[i+48].stop;
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,3,0)
+						}
 					}
 				)
 			}
@@ -490,10 +515,22 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+80].play(quant:(~t*4))
+						~a[i+80].play(quant:(~t*4));
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,5,15)
+						}
 					},
 					{
-						~a[i+80].stop
+						~a[i+80].stop;
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,5,0)
+						}
 					}
 				)
 			}
@@ -524,10 +561,22 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+112].play(quant:(~t*4))
+						~a[i+112].play(quant:(~t*4));
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,7,15)
+						}
 					},
 					{
-						~a[i+112].stop
+						~a[i+112].stop;
+						if(
+							~gridClass.notNil
+						)
+						{
+						~m.led(i,7,0)
+						}
 					}
 				)
 			}
