@@ -264,9 +264,9 @@ s.waitForBoot({
 		var delta;
 		loop {
 			delta = 0.1;
-			~listA = MIDIClient.list;
+			~listA = MIDIClient.destinations;
 			delta.yield;
-			~listB = MIDIClient.list;
+			~listB = MIDIClient.destinations;
 			(~listA != ~listB).if(
 				128.do{
 					arg i;
