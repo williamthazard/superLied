@@ -17,141 +17,174 @@ o.memSize_(2.pow(20));
 
 //initialize grid
 ~gridClass = 'MonomeGrid'.asClass;
-if(
-	~gridClass.notNil //check to see if monomeSC extension is present
-)
-{
-	~gridDevices = ~gridClass.getConnectedDevices;
-	if(
-		~gridDevices.size > 0 //check to see if a physical grid device is present
-	)
-	{
-		var draw;
-		~m = ~gridClass.new(0);
-		~m.connect; //if there is a grid, connect to it
-		~step = Array.fill(~m.cols * ~m.rows, {0});
-		~togs = Array.fill(4,{ arg k; 2*k+1});
-		~push = Array.fill(4, {arg k; 2*k});
-		for(0,4,{
-			arg y;
-			for(0,16,{
-				arg x; ~m.led(x,(2*y),4)
-			})
-		});
-		~m.key({ arg x,y,z;
-			var pos = x + (y*16);
+~gridInit = false;
+~step = Array.fill(128, {0});
+Task({
+	var delta;
+	loop {
+		delta = 0.5;
+		if(
+			~gridClass.notNil //check to see if monomeSC extension is present
+		)
+		{
+			~gridDevices = ~gridClass.getConnectedDevices;
 			if(
-				(z == 1) && (~togs.matchItem(y)),
+				~gridDevices.size > 0 //check to see if a physical grid device is present
+			)
+			{
+				if(
+					~gridInit == false
+				)
 				{
-					if(
-						~step[pos] == 1,
-						{
-							~step[pos] = 0;
-							~a[pos].stop;
-							AppClock.sched(0,{~comp[1].children[pos].value_(0)})
-						},
-						{
-							~step[pos] = 1;
-							~a[pos].play(quant:(~t*4));
-							AppClock.sched(0,{~comp[1].children[pos].value_(1)})
-						}
-					);
-					draw.value(x,y);
-			});
-			if (
-				~push.matchItem(y),
-				{
-					if(
-						z == 1,
-						{
-							~m.led(x,y,z*15);
-							if(
-								pos > 15,
-								{
-									~note[pos].source = PatternProxy(Pseq(~b.rotate(pos), inf));
-									~noted[pos] = ~note[pos].asStream
-								},
-								{
-									~b = ~historyproxy[pos].ascii%32;
-									AppClock.sched(0,{~entry_view.object = ~historyproxy[pos]});
-									AppClock.sched(0.5,{~entry_view.object = ''})
-								}
-							);
-						},
-						{~m.led(x,y,4)}
-					);
-			});
-		});
-		draw = {
-			arg x, y;
-			~m.led(x,y,~step[y*16+x] * 15);
+					var draw;
+					~m = ~gridClass.new(0);
+					~m.connect; //if there is a grid, connect to it
+					~togs = Array.fill(4,{ arg k; 2*k+1});
+					~push = Array.fill(4, {arg k; 2*k});
+					for(0,4,{
+						arg y;
+						for(0,16,{
+							arg x;
+							~m.led(x,(2*y),4)
+						})
+					});
+					~m.key({ arg x,y,z;
+						var pos = x + (y*16);
+						if(
+							(z == 1) && (~togs.matchItem(y)),
+							{
+								if(
+									~step[pos] == 1,
+									{
+										~step[pos] = 0;
+										~a[pos].stop;
+										AppClock.sched(0,{~comp[1].children[pos].value_(0)})
+									},
+									{
+										~step[pos] = 1;
+										~a[pos].play(quant:(~t*4));
+										AppClock.sched(0,{~comp[1].children[pos].value_(1)})
+									}
+								);
+								draw.value(x,y);
+							}
+						);
+						if(
+							~push.matchItem(y),
+							{
+								if(
+									z == 1,
+									{
+										~m.led(x,y,z*15);
+										if(
+											pos > 15,
+											{
+												~note[pos].source = PatternProxy(Pseq(~b.rotate(pos), inf));
+												~noted[pos] = ~note[pos].asStream
+											},
+											{
+												~b = ~historyproxy[pos].ascii%32;
+												AppClock.sched(0,{~entry_view.object = ~historyproxy[pos]});
+												AppClock.sched(0.5,{~entry_view.object = ''})
+											}
+										);
+									},
+									{~m.led(x,y,4)}
+								);
+							}
+						);
+					});
+					draw = {
+						arg x, y;
+						~m.led(x,y,~step[y*16+x] * 15);
+					};
+					~gridInit = true;
+				}
+			}
 		};
-	}
-};
+		delta.yield;
+}},
+AppClock
+).start;
 
 //default values for knob-controlled parameters
-~idim = Array.fill(128, {0});
-~dimi = Array.fill(128, {0});
-for(0,127,
-	{
-		arg i;
-		~idim[i]=0.2;
-		~dimi[i]=0.5;
-	}
-);
+~idim = Array.fill(128, {0.2});
+~dimi = Array.fill(128, {0.5});
 
 //wait
 s.waitForBoot({
 
 //initialize midi
-	MIDIClient.init;
-	MIDIIn.connectAll;
-	if(
-		MIDIClient.destinations.asString.contains("Midi Fighter Twister"),
-		{
-			MIDIdef.cc(\miid, {
-				arg val, num, chan, src;
-				if(
-					chan == 0,
-					for(0,63,{
-						arg i;
-						if(
-							num == i,
-							{
-								Pdefn(
-									i,
-									Pseq([val.linlin(0,127,0,1)],inf)
-								)
-							}
-						)
-					})
-				);
-				if(
-					chan == 4,
-					for(0,63,{
-						arg i;
-						if(
-							num == i,
-							{
-								Pdefn(
-									i+64,
-									Pseq([val.linlin(0,127,0,1)],inf)
-								)
-							}
-						)
-					})
-				);
-			}, chan: [0,4]);
-			~mft=MIDIOut(1);
-			for(0,63,
+	~mftInit = false;
+	~mftParamsPassed = false;
+	Task({
+		var delta;
+		loop {
+			delta = 0.5;
+			MIDIClient.list;
+			if(
+				MIDIClient.destinations.asString.contains("Midi Fighter Twister"),
 				{
-					arg i;
-					~mft.control(0,i,~idim[i].linlin(0,1,0,127));
-					~mft.control(4,i,~dimi[i].linlin(0,1,0,127));
+					if(
+						~mftInit == false,
+						{
+							MIDIClient.init;
+							MIDIIn.connectAll;
+							MIDIdef.cc(\miid, {
+								arg val, num, chan, src;
+								//[chan, num, val].postln;
+								if(
+									chan == 0,
+									for(0,63,{
+										arg i;
+										if(
+											num == i,
+											{
+												Pdefn(
+													i,
+													Pseq([val.linlin(0,127,0,1)],inf)
+												);
+												AppClock.sched(0,{~comp[0].children[i].value_(val.linlin(0,127,0,1))});
+												~idim[i] = val.linlin(0,127,0,1)
+											}
+										)
+									})
+								);
+								if(
+									chan == 4,
+									for(0,63,{
+										arg i;
+										if(
+											num == i,
+											{
+												Pdefn(
+													i+64,
+													Pseq([val.linlin(0,127,0,1)],inf)
+												);
+												AppClock.sched(0,{~comp[0].children[i+64].value_(val.linlin(0,127,0,1))});
+												~dimi[i] = val.linlin(0,127,0,1)
+											}
+										)
+									})
+								);
+							}, chan: [0,4]);
+							~mft=MIDIOut(1);
+							for(0,63,
+								{
+									arg i;
+									~mft.control(0,i,~idim[i].linlin(0,1,0,127));
+									~mft.control(4,i,~dimi[i].linlin(0,1,0,127));
+								}
+							);
+							~mftInit = true;
+						}
+					)
 				}
-			)
-		}
-	);
+			);
+			delta.yield;
+	}},
+	AppClock
+	).start;
 
 //gui
 	//text entry interface & background XY scope
@@ -159,7 +192,7 @@ s.waitForBoot({
 	w = Window("superLied",Window.availableBounds)
 	.background_(Color.black)
 	.fullScreen
-	.onClose_({~topScope.stop; ~bf.free; ~fb.free})
+	.onClose_({~topScope.stop; ~topScope.kill; ~bf.free; ~fb.free})
 	.layout = VLayout(~bodyView,~entry_view);
 	~num_history_lines = 16;
 	~line_width = 80;
@@ -232,7 +265,7 @@ s.waitForBoot({
 	});
 
 	//knobs
-	Array.fill(128,{ arg i;
+	Array.fill(64,{ arg i;
 		Knob(
 			~comp[0],
 			(k.bounds.width/16.9)@(k.bounds.width/16.9)
@@ -242,6 +275,21 @@ s.waitForBoot({
 				Color.new(1,1,1,0.5),
 				Color.new(0,0,0,0.5),
 				Color.new(0,0,0,0.5)
+			]
+		)
+	}
+	);
+
+	Array.fill(64,{ arg i;
+		Knob(
+			~comp[0],
+			(k.bounds.width/16.9)@(k.bounds.width/16.9)
+		).color_(
+			[
+				Color.new(1,1,1,0.25),
+				Color.new(1,1,1,0.25),
+				Color.new(0,0,0,0.25),
+				Color.new(0,0,0,0.25)
 			]
 		)
 	}
@@ -263,9 +311,11 @@ s.waitForBoot({
 	Task({
 		var delta;
 		loop {
-			delta = 0.1;
+			delta = 0.5;
+			MIDIClient.list;
 			~listA = MIDIClient.destinations;
 			delta.yield;
+			MIDIClient.list;
 			~listB = MIDIClient.destinations;
 			(~listA != ~listB).if(
 				128.do{
@@ -273,15 +323,31 @@ s.waitForBoot({
 					if(
 						MIDIClient.destinations.asString.contains("Midi Fighter Twister"),
 						{
-							AppClock.sched(0.5,{~comp[0].children[i].visible_(false)});
+							AppClock.sched(0,{~comp[0].children[i].visible_(false)});
+							if(
+								~mftInit == true,
+									if(
+										~mftParamsPassed == false,
+											if(
+												i<64,
+												{
+													~mft.control(0,i,~idim[i].linlin(0,1,0,127))
+												},
+												{
+													~mft.control(4,i-64,~dimi[i-64].linlin(0,1,0,127))
+												}
+											);
+											~mftParamsPassed = true
+									)
+							)
 						},
 						{
-							AppClock.sched(0.5,{~comp[0].children[i].visible_(true)})
+							AppClock.sched(0,{~comp[0].children[i].visible_(true)});
+							~mftParamsPassed = false
 						}
 					)
-				}
-			{};
-			delta.yield;
+				};
+				delta.yield;
 			)
 	}},
 	AppClock
@@ -295,6 +361,15 @@ s.waitForBoot({
 				Pdefn(
 					i,
 					Pseq([obj.value],inf)
+				);
+				if(
+					i<64,
+					{
+						~idim[i] = ~comp[0].children[i].value
+					},
+					{
+						~dimi[i-64] = ~comp[0].children[i].value
+					}
 				)
 			}
 		);
@@ -304,7 +379,7 @@ s.waitForBoot({
 				~comp[0].children[i].value_(~idim[i])
 			},
 			{
-				~comp[0].children[i].value_(~dimi[i])
+				~comp[0].children[i].value_(~dimi[i-64])
 			}
 		)
 	});
@@ -382,6 +457,7 @@ s.waitForBoot({
 	{
 	~gridClass.setAddCallback(
 		{
+			arg x,y;
 			128.do{
 				arg i;
 				AppClock.sched(0,{~comp[1].children[i].visible_(false)})
@@ -424,21 +500,11 @@ s.waitForBoot({
 					view.value == 0,
 					{
 						~a[i+16].play(quant:(~t*4));
-						if(
-							~gridClass.notNil
-						)
-						{
 						~m.led(i,1,15)
-						}
 					},
 					{
 						~a[i+16].stop;
-						if(
-							~gridClass.notNil
-						)
-						{
 						~m.led(i,1,0)
-						}
 					}
 				)
 			}
@@ -1100,7 +1166,7 @@ s.waitForBoot({
 				\sinepat4,
 				Pbind(
 					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[42]+1)],inf),
+					\dur, Pseq([1/(~note[42]+1)*2],inf),
 					\stretch, (~t*4),
 					\note, ~note[42],
 					\gtranspose, -12,
@@ -1125,7 +1191,7 @@ s.waitForBoot({
 				\sinepat5,
 				Pbind(
 					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[43]+1)],inf),
+					\dur, Pseq([1/(~note[43]+1)*4],inf),
 					\stretch, (~t*4),
 					\note, ~note[43],
 					\gtranspose, -12,
@@ -1150,7 +1216,7 @@ s.waitForBoot({
 				\sinepat6,
 				Pbind(
 					\instrument, \trisin,
-					\dur, Pseq([1/(~note[44]+1)],inf),
+					\dur, Pseq([1/(~note[44]+1)*4],inf),
 					\stretch, (~t*4),
 					\note, ~note[44],
 					\gtranspose, -12,
