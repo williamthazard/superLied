@@ -3,6 +3,10 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(20));
+//o.outDevice_("SONY TV");
+//o.numInputBusChannels_(0);
+//ServerOptions.devices;
+//o.device_("EPSON PJ");
 
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
@@ -33,7 +37,7 @@ Task({
 			)
 			{
 				if(
-					~gridInit == false
+					~gridInit == false //check to see if grid has been initialized
 				)
 				{
 					var draw;
@@ -126,47 +130,41 @@ s.waitForBoot({
 				MIDIClient.destinations.asString.contains("Midi Fighter Twister"),
 				{
 					if(
-						~mftInit == false,
+						~mftInit == false, //check to see if midi fighter twister has been initialized
 						{
 							MIDIClient.init;
 							MIDIIn.connectAll;
 							MIDIdef.cc(\miid, {
 								arg val, num, chan, src;
 								//[chan, num, val].postln;
-								if(
-									chan == 0,
-									for(0,63,{
-										arg i;
-										if(
-											num == i,
-											{
-												Pdefn(
-													i,
-													Pseq([val.linlin(0,127,0,1)],inf)
-												);
-												AppClock.sched(0,{~comp[0].children[i].value_(val.linlin(0,127,0,1))});
-												~idim[i] = val.linlin(0,127,0,1)
-											}
-										)
-									})
-								);
-								if(
-									chan == 4,
-									for(0,63,{
-										arg i;
-										if(
-											num == i,
-											{
-												Pdefn(
-													i+64,
-													Pseq([val.linlin(0,127,0,1)],inf)
-												);
-												AppClock.sched(0,{~comp[0].children[i+64].value_(val.linlin(0,127,0,1))});
-												~dimi[i] = val.linlin(0,127,0,1)
-											}
-										)
-									})
-								);
+								for(0,63,{
+									arg i;
+									if(
+										(num == i) && (chan == 0),
+										{
+											Pdefn(
+												i,
+												Pseq([val.linlin(0,127,0,1)],inf)
+											);
+											AppClock.sched(0,{~comp[0].children[i].value_(val.linlin(0,127,0,1))});
+											~idim[i] = val.linlin(0,127,0,1)
+										}
+									)
+								});
+								for(0,63,{
+									arg i;
+									if(
+										(num == i) && (chan == 4),
+										{
+											Pdefn(
+												i+64,
+												Pseq([val.linlin(0,127,0,1)],inf)
+											);
+											AppClock.sched(0,{~comp[0].children[i+64].value_(val.linlin(0,127,0,1))});
+											~dimi[i] = val.linlin(0,127,0,1)
+										}
+									)
+								});
 							}, chan: [0,4]);
 							~mft=MIDIOut(1);
 							for(0,63,
