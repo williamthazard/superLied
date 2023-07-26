@@ -7,7 +7,8 @@ o.memSize_(2.pow(20));
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
 ~t = 60/~tempo; //converting tempo into seconds
-
+~timer = TempoClock.new(128/60);
+~timer.play;
 //words, words, words
 ~b = " ".ascii%32;
 ~note = Array.fill(128, {0});
@@ -62,7 +63,7 @@ Task({
 									},
 									{
 										~step[pos] = 1;
-										~a[pos].play(quant:(~t*4));
+										~a[pos].play(~timer, quant: 4);
 										AppClock.sched(0,{~comp[1].children[pos].value_(1)})
 									}
 								);
@@ -186,7 +187,7 @@ s.waitForBoot({
 	w = Window("superLied",Window.availableBounds)
 	.background_(Color.black)
 	.fullScreen
-	.onClose_({~topScope.stop; ~topScope.kill; ~bf.free; ~fb.free})
+	.onClose_({~topScope.stop; ~bf.free; ~fb.free})
 	.layout = VLayout(~bodyView,~entry_view);
 	~num_history_lines = 16;
 	~line_width = 80;
@@ -493,12 +494,10 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+16].play(quant:(~t*4));
-						~m.led(i,1,15)
+						~a[i+16].play(~timer, quant: 4)
 					},
 					{
-						~a[i+16].stop;
-						~m.led(i,1,0)
+						~a[i+16].stop
 					}
 				)
 			}
@@ -529,22 +528,10 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+48].play(quant:(~t*4));
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,3,15)
-						}
+						~a[i+48].play(~timer, quant: 4)
 					},
 					{
-						~a[i+48].stop;
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,3,0)
-						}
+						~a[i+48].stop
 					}
 				)
 			}
@@ -575,22 +562,10 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+80].play(quant:(~t*4));
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,5,15)
-						}
+						~a[i+80].play(~timer, quant: 4)
 					},
 					{
-						~a[i+80].stop;
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,5,0)
-						}
+						~a[i+80].stop
 					}
 				)
 			}
@@ -621,22 +596,10 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+112].play(quant:(~t*4));
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,7,15)
-						}
+						~a[i+112].play(~timer, quant:1)
 					},
 					{
-						~a[i+112].stop;
-						if(
-							~gridClass.notNil
-						)
-						{
-						~m.led(i,7,0)
-						}
+						~a[i+112].stop
 					}
 				)
 			}
@@ -728,7 +691,7 @@ s.waitForBoot({
 			)
 		}).add;
 	);
-
+	s.sync;
 	(
 		Task({
 			SynthDef(\PlayBufPlayer, {
@@ -812,158 +775,312 @@ s.waitForBoot({
 			});
 		}).play;
 	);
-
+	s.sync;
 //synths
-
-	(
-		SynthDef(\sinsin, {
-			arg freq=440,
-			index=1,
-			modnum=1,
-			modeno=1,
-			phase=0,
-			atk=0,
-			rel=0.4,
-			amp=0.2,
-			pan=0,
-			bus=~fb.index;
-			var modfreq=(modnum/modeno)*freq;
-			var env=Env.perc(
-				attackTime: atk,
-				releaseTime: rel,
-				level: amp).kr(doneAction: 2);
-			var sig=Pan2.ar((SinOsc.ar(freq + (index*modfreq*SinOsc.ar(modfreq)), phase, amp)*env),pan);
-			Out.ar(
-				bus,
-				sig
-			)
-		}).add;
-	);
-
-	(
-		SynthDef(\trisin, {
-			arg freq=440,
-			index=1,
-			modnum=1,
-			modeno=1,
-			phase=0,
-			atk=2,
-			rel=2,
-			amp=0.2,
-			pan=0,
-			bus=~fb.index;
-			var modfreq=(modnum/modeno)*freq;
-			var env=Env.perc(
-				attackTime: atk,
-				releaseTime: rel,
-				level: amp).kr(doneAction: 2);
-			var sig=Pan2.ar((LFTri.ar(freq + (index*modfreq*SinOsc.ar(modfreq)), phase, amp)*env), pan);
-			Out.ar(
-				bus,
-				sig
-			)
-		}).add;
-	);
-
-	(
-		SynthDef(\ringer, {
-			arg freq=440,
-			index=3,
-			amp=0.2,
-			pan=0,
-			bus=~fb.index;
-			var env=Env.perc(
-				attackTime: 0.01,
-				releaseTime: index.abs*2,
-				level: amp).kr(doneAction: 2);
-			var sig=Pan2.ar((Ringz.ar(Impulse.ar(0), freq, index, amp)*env),pan);
-			Out.ar(
-				bus,
-				sig
-			)
-		}).add;
-	);
-
-	(
-		SynthDef(\slideSaw, {
-			arg out,
-			freq=440,
-			gate=1,
-			plfofreq=6,
-			mw=0,
-			ffreq=2000,
-			rq=0.3,
-			freqlag=0.05,
-			amp=0.5,
-			pan=0,
-			bus=~fb.index;
-			var sig, plfo, fcurve;
-			plfo=SinOsc.kr(plfofreq, mul:mw, add:1);
-			freq=Lag.kr(freq, freqlag) * plfo;
-			fcurve=EnvGen.kr(Env.adsr(0, 0.3, 0.1, 20), gate);
-			fcurve=(fcurve - 1).madd(0.7, 1) * ffreq;
-			sig=Mix.ar([Pulse.ar(freq, 0.9), Saw.ar(freq*1.007)]);
-			sig=RLPF.ar(sig, fcurve, rq)
-			* EnvGen.kr(Env.adsr(0.2, 0.2, 0.3, 0.3), gate, doneAction: 2)
-			* amp;
-			sig=Pan2.ar(sig, pan);
-			Out.ar(bus, sig ! 2)
-		}).add;
-	);
+	~sound = Array.fill(64, {0});
+	~voices = [\1, \2, \3, \4, \5, \6, \7, \8];
+	~voiceManager = Array.fill(64, {PatternProxy(Pseq(~voices, inf)).asStream});
+//mic
+	//{ Pan2.ar(SoundIn.ar(0)) }.play;
+//modulators
+	Ndef(\1, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\2, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\3, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\4, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\5, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\6, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\7, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\8, {
+		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+	});
+	Ndef(\9, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\10, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\11, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\12, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\13, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\14, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\15, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\16, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+	});
+	Ndef(\17, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\18, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\19, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\20, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\21, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\22, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\23, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\24, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+	});
+	Ndef(\25, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\26, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\27, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\28, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\29, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\30, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\31, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\32, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
+	});
+	Ndef(\33, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\34, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\35, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\36, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\37, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\38, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\39, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\40, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
+	});
+	Ndef(\41, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\42, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\43, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\44, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\45, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\46, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\47, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+	});
+	Ndef(\48, {
+		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
+	});
 
 //sequences
 	//bank 1
 	(
+		~sound.put(0,
+			TriSin.new);
+		~sound[0].setParam('all',\bus,~fb.index);
+		~sound[0].setParam(\1,\pan,Ndef(\1));
+		~sound[0].setParam(\2,\pan,Ndef(\2));
+		~sound[0].setParam(\3,\pan,Ndef(\3));
+		~sound[0].setParam(\4,\pan,Ndef(\4));
+		~sound[0].setParam(\5,\pan,Ndef(\5));
+		~sound[0].setParam(\6,\pan,Ndef(\6));
+		~sound[0].setParam(\7,\pan,Ndef(\7));
+		~sound[0].setParam(\8,\pan,Ndef(\8));
+		~sound[0].setParam(\1,\cutoff,Ndef(\9));
+		~sound[0].setParam(\2,\cutoff,Ndef(\10));
+		~sound[0].setParam(\3,\cutoff,Ndef(\11));
+		~sound[0].setParam(\4,\cutoff,Ndef(\12));
+		~sound[0].setParam(\5,\cutoff,Ndef(\13));
+		~sound[0].setParam(\6,\cutoff,Ndef(\14));
+		~sound[0].setParam(\7,\cutoff,Ndef(\15));
+		~sound[0].setParam(\8,\cutoff,Ndef(\16));
+		~sound[0].setParam(\1,\resonance,Ndef(\17));
+		~sound[0].setParam(\2,\resonance,Ndef(\18));
+		~sound[0].setParam(\3,\resonance,Ndef(\19));
+		~sound[0].setParam(\4,\resonance,Ndef(\20));
+		~sound[0].setParam(\5,\resonance,Ndef(\21));
+		~sound[0].setParam(\6,\resonance,Ndef(\22));
+		~sound[0].setParam(\7,\resonance,Ndef(\23));
+		~sound[0].setParam(\8,\resonance,Ndef(\24));
+		~sound[0].setParam(\1,\reverb_amount,Ndef(\25));
+		~sound[0].setParam(\2,\reverb_amount,Ndef(\26));
+		~sound[0].setParam(\3,\reverb_amount,Ndef(\27));
+		~sound[0].setParam(\4,\reverb_amount,Ndef(\28));
+		~sound[0].setParam(\5,\reverb_amount,Ndef(\29));
+		~sound[0].setParam(\6,\reverb_amount,Ndef(\30));
+		~sound[0].setParam(\7,\reverb_amount,Ndef(\31));
+		~sound[0].setParam(\8,\reverb_amount,Ndef(\32));
+		~sound[0].setParam(\1,\room_size,Ndef(\33));
+		~sound[0].setParam(\2,\room_size,Ndef(\34));
+		~sound[0].setParam(\3,\room_size,Ndef(\35));
+		~sound[0].setParam(\4,\room_size,Ndef(\36));
+		~sound[0].setParam(\5,\room_size,Ndef(\37));
+		~sound[0].setParam(\6,\room_size,Ndef(\38));
+		~sound[0].setParam(\7,\room_size,Ndef(\39));
+		~sound[0].setParam(\8,\room_size,Ndef(\40));
+		~sound[0].setParam(\1,\damp,Ndef(\41));
+		~sound[0].setParam(\2,\damp,Ndef(\42));
+		~sound[0].setParam(\3,\damp,Ndef(\43));
+		~sound[0].setParam(\4,\damp,Ndef(\44));
+		~sound[0].setParam(\5,\damp,Ndef(\45));
+		~sound[0].setParam(\6,\damp,Ndef(\46));
+		~sound[0].setParam(\7,\damp,Ndef(\47));
+		~sound[0].setParam(\8,\damp,Ndef(\48));
 		~note.put(32,
 			PatternProxy(Pseq(~b, inf)));
+		~noted.put(32,
+			~note[32].asStream);
 		~a.put(16,
-			Pdef(
-				\drone,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pwhite(0.05,0.5, inf),
-					\stretch, (~t*4),
-					\note, ~note[32],
-					\gtranspose, -12,
-					\atk, Pwhite(2,3, inf),
-					\rel, Pwhite(5,10, inf),
-					\amp, Pdefn(0, Pseq([~idim[0]], inf)),
-					\pan, Pwhite(-0.8,0.8, inf),
-					\index, Pdefn(64, Pseq([~dimi[0].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4, 1], inf),
-					\modeno, Pseq([1, 2, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task0, {
+				var delta, voice;
+				loop {
+					delta = ~timer.beatDur*rrand(8,10);
+					voice = ~voiceManager[0].next;
+					~sound[0].setParam(voice,\attack,rrand(2,10));
+					~sound[0].setParam(voice,\release,rrand(5,10));
+					~sound[0].setParam(voice,\amp,~idim[0]);
+					~sound[0].setParam(voice,\pan_slew,rrand(7,20));
+					~sound[0].setParam(voice,\index,~dimi[0].linlin(0,1,-24,24));
+					~sound[0].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
+					~sound[0].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
+					~sound[0].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[0].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[0].trigger(voice,(~noted[32].next+[24,36].choose).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(1,
+			SinSin.new);
+		~sound[1].setParam('all',\bus,~fb.index);
 		~note.put(33,
 			PatternProxy(Pseq(~b.rotate(1), inf)));
+		~noted.put(33,
+			~note[33].asStream);
 		~a.put(17,
-			Pdef(
-				\sinepat,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\note, ~note[33],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(1, Pseq([~idim[1]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(65, Pseq([~dimi[1].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pseq([1, 2], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task1, {
+				var delta, voice;
+				loop {
+					delta = ~timer.beatDur*2;
+					voice = ~voiceManager[1].next;
+					~sound[1].setParam(voice,\attack,rrand(0.005,0.01));
+					~sound[1].setParam(voice,\release,rrand(0.3,1));
+					~sound[1].setParam(voice,\amp,~idim[1]);
+					~sound[1].setParam(voice,\pan,rrand(-0.8,0.8));
+					~sound[1].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[1].setParam(voice,\index,~dimi[1].linlin(0,1,-24,24));
+					~sound[1].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
+					~sound[1].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
+					~sound[1].setParam(voice,\cutoff,rrand(500,7000).lag3(rrand(0.1,20.0)));
+					~sound[1].setParam(voice,\resonance,rrand(0,1).lag3(rrand(0.1,20.0)));
+					~sound[1].setParam(voice,\freq_slew,3);
+					~sound[1].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[1].setParam('all',\reverb_amount,rrand(0.3,0.5).lag3(rrand(0.1,1)));
+					~sound[1].setParam('all',\room_size,rrand(0.3,0.5).lag3(rrand(0.1,1)));
+					~sound[1].setParam('all',\damp,rrand(0.3,0.5).lag3(rrand(0.1,1)));
+					~sound[1].trigger(Pseq([\1,\2], inf).asStream.next,(~noted[33].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(2,
+			SinSin.new);
+		~sound[2].setParam('all',\bus,~fb.index);
+		~note.put(34,
+			PatternProxy(Pseq(~b.rotate(2), inf)));
+		~noted.put(34,
+			~note[34].asStream);
+		~a.put(18,
+			Tdef(\task2, {
+				var delta, voice;
+				loop {
+					delta = ~timer.beatDur*4;
+					voice = ~voiceManager[2].next;
+					~sound[2].setParam(voice,\attack,Pseq([0.005,0.007,0.25], inf).asStream.next);
+					~sound[2].setParam(voice,\release,Pseq([0.3,1.48,1], inf).asStream.next);
+					~sound[2].setParam(voice,\amp,~idim[2]);
+					~sound[2].setParam(voice,\pan,rrand(-0.8,0.8));
+					~sound[2].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[2].setParam(voice,\index,~dimi[2].linlin(0,1,-24,24));
+					~sound[2].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
+					~sound[2].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
+					~sound[2].setParam(voice,\cutoff,rrand(500,7000).lag3(rrand(0.1,20.0)));
+					~sound[2].setParam(voice,\resonance,rrand(0,1).lag3(rrand(0.1,20.0)));
+					~sound[2].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[2].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[2].setParam('all',\reverb_amount,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
+					~sound[2].setParam('all',\room_size,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
+					~sound[2].setParam('all',\damp,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
+					~sound[2].trigger(voice,(~noted[33].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+	/*(
 		~note.put(34,
 			PatternProxy(Pseq(~b.rotate(2), inf)));
 		~a.put(18,
@@ -986,7 +1103,7 @@ s.waitForBoot({
 				);
 			).quant_(~t*4)
 		)
-	);
+	);*/
 
 	(
 		~note.put(35,
@@ -996,7 +1113,7 @@ s.waitForBoot({
 				\phrase,
 				Pbind(
 					\instrument, \ringer,
-					\dur, Pseq([1/4,1/8,1/8], inf),
+					\dur, Pseq([1/4,1/8,1/8,1/4], inf),
 					\stretch, (~t*4),
 					\note, ~note[35],
 					\gtranspose, -12,
@@ -1166,9 +1283,9 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.02, 0.07, 0.03, 0.05], inf),
 					\rel, Pseq([1,3,2],inf),
-					\amp, Pdefn(\10, Pseq([~idim[10]], inf)),
+					\amp, Pdefn(10, Pseq([~idim[10]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\26, Pseq([~dimi[10].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(74, Pseq([~dimi[10].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([1, 2], inf),
 					\modeno, Pseq([1, 4, 2], inf),
 					\bus, ~fb.index
@@ -1191,9 +1308,9 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.01], inf),
 					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(\11, Pseq([~idim[11]], inf)),
+					\amp, Pdefn(11, Pseq([~idim[11]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\27, Pseq([~dimi[11].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(75, Pseq([~dimi[11].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([1, 2, 4], inf),
 					\modeno, Pseq([2, 1, 4, 1], inf),
 					\bus, ~fb.index
@@ -1216,9 +1333,9 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.01], inf),
 					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(\12, Pseq([~idim[12]], inf)),
+					\amp, Pdefn(12, Pseq([~idim[12]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\28, Pseq([~dimi[12].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(76, Pseq([~dimi[12].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([1, 2, 4], inf),
 					\modeno, Pseq([2, 1, 2, 4], inf),
 					\bus, ~fb.index
@@ -1241,9 +1358,9 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.01], inf),
 					\rel, Pseq([0.007, 0.001, 0.05, 0.01], inf),
-					\amp, Pdefn(\13, Pseq([~idim[13]], inf)),
+					\amp, Pdefn(13, Pseq([~idim[13]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\29, Pseq([~dimi[13].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(77, Pseq([~dimi[13].linlin(0,1,-24,24)], inf)),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1262,9 +1379,9 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[46],
 					\gtranspose, -12,
-					\amp, Pdefn(\14, Pseq([~idim[14]], inf)),
+					\amp, Pdefn(14, Pseq([~idim[14]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\30, Pseq([~dimi[14].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(78, Pseq([~dimi[14].linlin(0,1,-24,24)], inf)),
 					\coef, Pseq([0.5],inf),
 					\bus, ~fb.index
 				);
@@ -1284,10 +1401,10 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[47],
 					\gtranspose, -19,
-					\amp, Pdefn(\15, Pseq([~idim[15]], inf)),
+					\amp, Pdefn(15, Pseq([~idim[15]], inf)),
 					\legato, 1,
 					\freqlag, Pseq([0.1],inf),
-					\ffreq, Pdefn(\31, Pseq([~dimi[15].linlin(0,1,100,4000)], inf)),
+					\ffreq, Pdefn(79, Pseq([~dimi[15].linlin(0,1,100,4000)], inf)),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1298,14 +1415,14 @@ s.waitForBoot({
 	//sample 1
 	(
 		~note.put(64,
-			PatternProxy(Pseq(~b.rotate(16), inf)));
+			PatternProxy(Pseq(~b.rotate(16), inf))); //16/80
 		~noted.put(64,
 			~note[64].asStream);
 		~a.put(48,
 			Task({
 				var delta, starter, ender;
 				loop {
-					delta = ~t*4;
+					delta = ~t*(~noted[64].next+1);
 					starter = ~noted[64].next.linlin(0,32,0,1);
 					ender = starter+0.01;
 					~player[48].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
@@ -1317,14 +1434,14 @@ s.waitForBoot({
 
 	(
 		~note.put(65,
-			PatternProxy(Pseq(~b.rotate(17), inf)));
+			PatternProxy(Pseq(~b.rotate(17), inf))); //17/81
 		~noted.put(65,
 			~note[65].asStream);
 		~a.put(49,
 			Task({
 				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
+					delta = ~t*(~noted[65].next+1);
 					scaledtime = ~noted[65].next.linlin(0,32,-2,2);
 					~player[48].set(\rate, scaledtime);
 					delta.yield;
@@ -1335,14 +1452,14 @@ s.waitForBoot({
 
 	(
 		~note.put(66,
-			PatternProxy(Pseq(~b.rotate(18), inf)));
+			PatternProxy(Pseq(~b.rotate(18), inf))); //18/82
 		~noted.put(66,
 			~note[66].asStream);
 		~a.put(50,
 			Task({
 				var delta, panner;
 				loop {
-					delta = ~t*4;
+					delta = ~t*(~noted[66].next+1);
 					panner = ~noted[66].next.linlin(0,32,-1,1);
 					~player[48].set(\pan, panner);
 					delta.yield;
@@ -1354,7 +1471,7 @@ s.waitForBoot({
 	//sample 2
 	(
 		~note.put(67,
-			PatternProxy(Pseq(~b.rotate(19), inf)));
+			PatternProxy(Pseq(~b.rotate(19), inf))); //19/83
 		~noted.put(67,
 			~note[67].asStream);
 		~a.put(51,
@@ -1373,7 +1490,7 @@ s.waitForBoot({
 
 	(
 		~note.put(68,
-			PatternProxy(Pseq(~b.rotate(20), inf)));
+			PatternProxy(Pseq(~b.rotate(20), inf))); //20/84
 		~noted.put(68,
 			~note[68].asStream);
 		~a.put(52,
@@ -1382,7 +1499,7 @@ s.waitForBoot({
 				loop {
 					delta = ~t*4;
 					scaledtime = ~noted[68].next.linlin(0,32,-2,2);
-					~player[49].set(\rate, scaledtime);
+					~player[49].set(\pan, scaledtime);
 					delta.yield;
 				}
 			})
@@ -1391,7 +1508,7 @@ s.waitForBoot({
 
 	(
 		~note.put(69,
-			PatternProxy(Pseq(~b.rotate(21), inf)));
+			PatternProxy(Pseq(~b.rotate(21), inf))); //21/85
 		~noted.put(69,
 			~note[69].asStream);
 		~a.put(53,
@@ -1410,14 +1527,14 @@ s.waitForBoot({
 	//sample 3
 	(
 		~note.put(70,
-			PatternProxy(Pseq(~b.rotate(22), inf)));
+			PatternProxy(Pseq(~b.rotate(22), inf))); //22/86
 		~noted.put(70,
 			~note[70].asStream);
 		~a.put(54,
 			Task({
 				var delta, starter, ender;
 				loop {
-					delta = ~t*4;
+					delta = ~t*(~noted[70].next+1);
 					starter = ~noted[70].next.linlin(0,32,0,1);
 					ender = starter+0.06;
 					~player[50].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.7,\bus,~fb.index);
@@ -1429,14 +1546,14 @@ s.waitForBoot({
 
 	(
 		~note.put(71,
-			PatternProxy(Pseq(~b.rotate(23), inf)));
+			PatternProxy(Pseq(~b.rotate(23), inf))); //23/87
 		~noted.put(71,
 			~note[71].asStream);
 		~a.put(55,
 			Task({
 				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
+					delta = ~t*(~noted[71].next+1);
 					scaledtime = ~noted[71].next.linlin(0,32,-2,2);
 					~player[50].set(\rate, scaledtime);
 					delta.yield;
@@ -1448,7 +1565,7 @@ s.waitForBoot({
 	//sample 4
 	(
 		~note.put(72,
-			PatternProxy(Pseq(~b.rotate(24), inf)));
+			PatternProxy(Pseq(~b.rotate(24), inf))); //24/88
 		~noted.put(72,
 			~note[72].asStream);
 		~a.put(56,
@@ -1467,7 +1584,7 @@ s.waitForBoot({
 
 	(
 		~note.put(73,
-			PatternProxy(Pseq(~b.rotate(25), inf)));
+			PatternProxy(Pseq(~b.rotate(25), inf))); //25/89
 		~noted.put(73,
 			~note[73].asStream);
 		~a.put(57,
@@ -1485,7 +1602,7 @@ s.waitForBoot({
 
 	(
 		~note.put(74,
-			PatternProxy(Pseq(~b.rotate(26), inf)));
+			PatternProxy(Pseq(~b.rotate(26), inf))); //26/90
 		~noted.put(74,
 			~note[74].asStream);
 		~a.put(58,
@@ -1504,7 +1621,7 @@ s.waitForBoot({
 	//sample 5
 	(
 		~note.put(75,
-			PatternProxy(Pseq(~b.rotate(27), inf)));
+			PatternProxy(Pseq(~b.rotate(27), inf))); //27/91
 		~noted.put(75,
 			~note[75].asStream);
 		~a.put(59,
@@ -1523,7 +1640,7 @@ s.waitForBoot({
 
 	(
 		~note.put(76,
-			PatternProxy(Pseq(~b.rotate(28), inf)));
+			PatternProxy(Pseq(~b.rotate(28), inf))); //28/92
 		~noted.put(76,
 			~note[76].asStream);
 		~a.put(60,
@@ -1541,7 +1658,7 @@ s.waitForBoot({
 
 	(
 		~note.put(77,
-			PatternProxy(Pseq(~b.rotate(29), inf)));
+			PatternProxy(Pseq(~b.rotate(29), inf))); //29/93
 		~noted.put(77,
 			~note[77].asStream);
 		~a.put(61,
@@ -1560,7 +1677,7 @@ s.waitForBoot({
 	//sample 6
 	(
 		~note.put(78,
-			PatternProxy(Pseq(~b.rotate(30), inf)));
+			PatternProxy(Pseq(~b.rotate(30), inf))); //30/94
 		~noted.put(78,
 			~note[78].asStream);
 		~a.put(62,
@@ -1579,7 +1696,7 @@ s.waitForBoot({
 
 	(
 		~note.put(79,
-			PatternProxy(Pseq(~b.rotate(31), inf)));
+			PatternProxy(Pseq(~b.rotate(31), inf))); //31/95
 		~noted.put(79,
 			~note[79].asStream);
 		~a.put(63,
@@ -1610,11 +1727,11 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pwhite(2,3, inf),
 					\rel, Pwhite(5,10, inf),
-					\amp, Pwhite(0.01,0.1, inf),
+					\amp, Pdefn(32, Pseq([~idim[32]], inf)),
 					\pan, Pwhite(-0.8,0.8, inf),
-					\index, Pdefn(\64, Pseq([~idim[64].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2], inf),
-					\modeno, Pdefn(\80, Pseq([~idim[80].linlin(0,1,1,4)], inf)),
+					\index, Pdefn(96, Pseq([~dimi[32].linlin(0,1,-24,24)], inf)),
+					\modnum, Pseq([1, 2, 4, 2], inf),
+					\modeno, Pseq([1, 4, 2], inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1635,11 +1752,11 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.01], inf),
 					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
+					\amp, Pdefn(33, Pseq([~idim[33]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\65, Pseq([~idim[65].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(97, Pseq([~dimi[33].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pdefn(\81, Pseq([~idim[81].linlin(0,1,1,4)], inf)),
+					\modeno, Pseq([1, 4, 2, 4],inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1660,11 +1777,11 @@ s.waitForBoot({
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.25], inf),
 					\rel, Pseq([0.3, 1.48, 1], inf),
-					\amp, Pseq([0.075, 0.1, 0.1, 0.095], inf),
+					\amp, Pdefn(34, Pseq([~idim[34]], inf)),
 					\pan, Pseq([0.8, -0.8], inf),
-					\index, Pdefn(\66, Pseq([~idim[66].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(98, Pseq([~dimi[34].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pdefn(\82, Pseq([~idim[82].linlin(0,1,1,4)], inf)),
+					\modeno, Pseq([1, 2, 4, 2], inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1684,10 +1801,10 @@ s.waitForBoot({
 					\note, ~note[99],
 					\gtranspose, -12,
 					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pdefn(\67, Pseq([~idim[67].linlin(0,1,0.001,3)], inf)),
-					\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
+					\rel, Pseq([0.1, 0.15, 0.2, 0.1], inf),
+					\amp, Pdefn(35, Pseq([~idim[35]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\83, Pseq([~idim[83].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(99, Pseq([~dimi[35].linlin(0,1,-24,24)], inf)),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1706,11 +1823,11 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[100],
 					\gtranspose, -12,
-					\amp, Pseq([0.1, 0.2, 0.15, 0.1], inf),
+					\amp, Pdefn(36, Pseq([~idim[36]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\68, Pseq([~idim[68].linlin(0,1,-24,24)], inf)),
+					\index, Pdefn(100, Pseq([~dimi[36].linlin(0,1,-24,24)], inf)),
 					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pdefn(\84, Pseq([~idim[84].linlin(0,1,1,4)], inf)),
+					\modeno, Pseq([1, 2, 4, 1], inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1729,10 +1846,11 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[101],
 					\gtranspose, -12,
-					\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
+					\amp, Pdefn(37, Pseq([~idim[37]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\69, Pseq([~idim[69].linlin(0,1,-24,24)], inf)),
-					\coef, Pdefn(\85, Pseq([~idim[85]], inf)),
+					\index, Pdefn(101, Pseq([~dimi[37].linlin(0,1,-24,24)], inf)),
+					\modnum, Pseq([2, 4, 1], inf),
+					\modeno, Pseq([1, 2, 4, 1], inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1751,10 +1869,11 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[102],
 					\gtranspose, -12,
-					\amp, Pseq([0.5, 0.4, 0.6, 0.4], inf),
+					\amp, Pdefn(38, Pseq([~idim[38]], inf)),
 					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\70, Pseq([~idim[70].linlin(0,1,-24,24)], inf)),
-					\coef, Pdefn(\86, Pseq([~idim[86]], inf)),
+					\index, Pdefn(102, Pseq([~dimi[38].linlin(0,1,-24,24)], inf)),
+					\modnum, Pseq([2, 4, 1], inf),
+					\modeno, Pseq([1, 2, 4, 1], inf),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
@@ -1773,9 +1892,10 @@ s.waitForBoot({
 					\stretch, (~t*4),
 					\note, ~note[103],
 					\gtranspose, -12,
+					\amp, Pdefn(39, Pseq([~idim[39]], inf)),
 					\legato, 1,
-					\freqlag, Pdefn(\71, Pseq([~idim[71].linlin(0,1,0,0.3)], inf)),
-					\ffreq, Pdefn(\87, Pseq([~idim[87].linlin(0,1,100,4000)], inf)),
+					\freqlag, Pseq([0.1,0.01,0.2],inf),
+					\ffreq, Pdefn(103, Pseq([~dimi[103].linlin(0,1,100,4000)], inf)),
 					\bus, ~fb.index
 				);
 			).quant_(~t*4)
