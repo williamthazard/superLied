@@ -3,9 +3,6 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(20));
-o.device_("Scarlett 4i4 USB");
-//o.numInputBusChannels_(0);
-//ServerOptions.devices;
 
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
