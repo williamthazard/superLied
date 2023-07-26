@@ -3,6 +3,9 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(20));
+o.device_("Scarlett 4i4 USB");
+//o.numInputBusChannels_(0);
+//ServerOptions.devices;
 
 //tempo
 ~tempo = 128; //put tempo here (in bpm)
@@ -783,149 +786,40 @@ s.waitForBoot({
 //mic
 	//{ Pan2.ar(SoundIn.ar(0)) }.play;
 //modulators
-	Ndef(\1, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\2, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\3, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\4, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\5, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\6, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\7, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\8, {
-		SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
-	});
-	Ndef(\9, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\10, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\11, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\12, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\13, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\14, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\15, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\16, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
-	});
-	Ndef(\17, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\18, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\19, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\20, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\21, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\22, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\23, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\24, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
-	});
-	Ndef(\25, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\26, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\27, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\28, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\29, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\30, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\31, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\32, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
-	});
-	Ndef(\33, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\34, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\35, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\36, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\37, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\38, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\39, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\40, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
-	});
-	Ndef(\41, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\42, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\43, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\44, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\45, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\46, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\47, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
-	});
-	Ndef(\48, {
-		SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.5,0.5)
+	48.do({
+		arg i;
+		if(
+			i < 9,
+			{
+				Ndef(i.asSymbol, {
+					SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+				})
+			}
+		);
+		if(
+			(i > 8) && (i < 17),
+			{
+				Ndef(i.asSymbol, {
+					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+				})
+			}
+		);
+		if(
+			(i > 16) && (i < 25),
+			{
+				Ndef(i.asSymbol, {
+					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+				})
+			}
+		);
+		if(
+			i > 24,
+			{
+				Ndef(i.asSymbol, {
+					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+				})
+			}
+		)
 	});
 
 //sequences
@@ -934,54 +828,54 @@ s.waitForBoot({
 		~sound.put(0,
 			TriSin.new);
 		~sound[0].setParam('all',\bus,~fb.index);
-		~sound[0].setParam(\1,\pan,Ndef(\1));
-		~sound[0].setParam(\2,\pan,Ndef(\2));
-		~sound[0].setParam(\3,\pan,Ndef(\3));
-		~sound[0].setParam(\4,\pan,Ndef(\4));
-		~sound[0].setParam(\5,\pan,Ndef(\5));
-		~sound[0].setParam(\6,\pan,Ndef(\6));
-		~sound[0].setParam(\7,\pan,Ndef(\7));
-		~sound[0].setParam(\8,\pan,Ndef(\8));
-		~sound[0].setParam(\1,\cutoff,Ndef(\9));
-		~sound[0].setParam(\2,\cutoff,Ndef(\10));
-		~sound[0].setParam(\3,\cutoff,Ndef(\11));
-		~sound[0].setParam(\4,\cutoff,Ndef(\12));
-		~sound[0].setParam(\5,\cutoff,Ndef(\13));
-		~sound[0].setParam(\6,\cutoff,Ndef(\14));
-		~sound[0].setParam(\7,\cutoff,Ndef(\15));
-		~sound[0].setParam(\8,\cutoff,Ndef(\16));
-		~sound[0].setParam(\1,\resonance,Ndef(\17));
-		~sound[0].setParam(\2,\resonance,Ndef(\18));
-		~sound[0].setParam(\3,\resonance,Ndef(\19));
-		~sound[0].setParam(\4,\resonance,Ndef(\20));
-		~sound[0].setParam(\5,\resonance,Ndef(\21));
-		~sound[0].setParam(\6,\resonance,Ndef(\22));
-		~sound[0].setParam(\7,\resonance,Ndef(\23));
-		~sound[0].setParam(\8,\resonance,Ndef(\24));
-		~sound[0].setParam(\1,\reverb_amount,Ndef(\25));
-		~sound[0].setParam(\2,\reverb_amount,Ndef(\26));
-		~sound[0].setParam(\3,\reverb_amount,Ndef(\27));
-		~sound[0].setParam(\4,\reverb_amount,Ndef(\28));
-		~sound[0].setParam(\5,\reverb_amount,Ndef(\29));
-		~sound[0].setParam(\6,\reverb_amount,Ndef(\30));
-		~sound[0].setParam(\7,\reverb_amount,Ndef(\31));
-		~sound[0].setParam(\8,\reverb_amount,Ndef(\32));
-		~sound[0].setParam(\1,\room_size,Ndef(\33));
-		~sound[0].setParam(\2,\room_size,Ndef(\34));
-		~sound[0].setParam(\3,\room_size,Ndef(\35));
-		~sound[0].setParam(\4,\room_size,Ndef(\36));
-		~sound[0].setParam(\5,\room_size,Ndef(\37));
-		~sound[0].setParam(\6,\room_size,Ndef(\38));
-		~sound[0].setParam(\7,\room_size,Ndef(\39));
-		~sound[0].setParam(\8,\room_size,Ndef(\40));
-		~sound[0].setParam(\1,\damp,Ndef(\41));
-		~sound[0].setParam(\2,\damp,Ndef(\42));
-		~sound[0].setParam(\3,\damp,Ndef(\43));
-		~sound[0].setParam(\4,\damp,Ndef(\44));
-		~sound[0].setParam(\5,\damp,Ndef(\45));
-		~sound[0].setParam(\6,\damp,Ndef(\46));
-		~sound[0].setParam(\7,\damp,Ndef(\47));
-		~sound[0].setParam(\8,\damp,Ndef(\48));
+		48.do({
+			arg i;
+			if(
+				i < 9,
+				{
+					~sound[0].setParam(((i%8)+1).asSymbol,\pan,Ndef(i.asSymbol));
+				}
+			);
+			if(
+				(i > 8) && (i < 17),
+				{
+					~sound[0].setParam(((i%8)+1).asSymbol,\cutoff,Ndef(i.asSymbol));
+				}
+			);
+			if(
+				(i > 16) && (i < 25),
+				{
+					~sound[0].setParam(((i%8)+1).asSymbol,\resonance,Ndef(i.asSymbol));
+				}
+			);
+			if(
+				i > 24,
+				{
+					if(
+						i < 33,
+						{
+							~sound[0].setParam(((i%8)+1).asSymbol,\reverb_amount,Ndef(i.asSymbol))
+						}
+					)
+				};
+				{
+					if(
+						(i > 32) && (i < 41),
+						{
+							~sound[0].setParam(((i%8)+1).asSymbol,\room_size,Ndef(i.asSymbol))
+						}
+					)
+				};
+				{
+					if(
+						i > 40,
+						{
+							~sound[0].setParam(((i%8)+1).asSymbol,\damp,Ndef(i.asSymbol))
+						}
+					)
+				}
+			)
+		});
 		~note.put(32,
 			PatternProxy(Pseq(~b, inf)));
 		~noted.put(32,
