@@ -121,7 +121,7 @@ TriSin {
 		arg voiceKey, freq;
 		singleVoices[voiceKey].set(\stopGate, -1.05);
 		voiceParams[voiceKey][\freq] = freq;
-		Synth.new("SinSin", [\freq, freq] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
+		Synth.new("TriSin", [\freq, freq] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
 	}
 
 	trigger {
