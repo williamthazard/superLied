@@ -13,4 +13,5 @@ The grid of buttons works this way:<br>
 <b>Row 8</b>: trigger sample playback. These samples play in their entirety and are unaffected by the active line (works nicely for drums)
 <br><br>
 The knobs correspond roughly to the synths and samplers on the grid. 128 knobs, 128 buttons. Play around with them. See what happens.
+<br><br>
 <b>note: in order for superlied.scd to work properly, you'll need to add the 3 .sc files in the "classes" folder to your extensions folder (if you don't know where your extensions folder is, SuperCollider's IDE will show you! Just hit file > open user support directory)</b>
