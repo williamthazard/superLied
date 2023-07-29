@@ -19,9 +19,6 @@ Ringer {
 					stopGate = 1,
 					index,
 					freq,
-					cutoff,
-					resonance,
-					cutoff_env,
 					amp,
 					pan,
 					freq_slew,
@@ -49,15 +46,9 @@ Ringer {
 						amp
 					)*envelope;
 
-					var filter = MoogFF.ar(
-						in: sig,
-						freq: Select.kr(cutoff_env > 0, [cutoff, cutoff * envelope]),
-						gain: resonance
-					);
-
 					var signal = Pan2.ar(
 						FreeVerb.ar(
-							filter*envelope,
+							sig*envelope,
 							reverb_amount,
 							room_size,
 							damp
@@ -84,10 +75,6 @@ Ringer {
 		globalParams = Dictionary.newFrom([
 			\freq, 400,
 			\index, 3,
-			\cutoff, 8000,
-			\cutoff_env, 1,
-			\resonance, 3,
-			\attack, 0.01,
 			\amp, 0.5,
 			\pan, 0,
 			\freq_slew, 0,
@@ -111,7 +98,7 @@ Ringer {
 		arg voiceKey, freq;
 		singleVoices[voiceKey].set(\stopGate, -1.05);
 		voiceParams[voiceKey][\freq] = freq;
-		Synth.new("SinSin", [\freq, freq] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
+		Synth.new("Ringer", [\freq, freq] ++ voiceParams[voiceKey].getPairs, singleVoices[voiceKey]);
 	}
 
 	trigger {
