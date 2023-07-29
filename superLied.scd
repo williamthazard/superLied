@@ -2,13 +2,11 @@
 //server
 Server.default = Server.local;
 o = Server.default.options;
-o.memSize_(2.pow(20));
+o.memSize_(2.pow(40));
 
 //tempo
-~tempo = 128; //put tempo here (in bpm)
-~t = 60/~tempo; //converting tempo into seconds
 ~timer = TempoClock.new(128/60);
-~timer.play;
+
 //words, words, words
 ~b = " ".ascii%32;
 ~note = Array.fill(128, {0});
@@ -37,7 +35,6 @@ Task({
 					~gridInit == false //check to see if grid has been initialized
 				)
 				{
-					var draw;
 					~m = ~gridClass.new(0);
 					~m.connect; //if there is a grid, connect to it
 					~togs = Array.fill(4,{ arg k; 2*k+1});
@@ -67,7 +64,7 @@ Task({
 										AppClock.sched(0,{~comp[1].children[pos].value_(1)})
 									}
 								);
-								draw.value(x,y);
+								~draw.value(x,y);
 							}
 						);
 						if(
@@ -95,7 +92,7 @@ Task({
 							}
 						);
 					});
-					draw = {
+					~draw = {
 						arg x, y;
 						~m.led(x,y,~step[y*16+x] * 15);
 					};
@@ -133,7 +130,6 @@ s.waitForBoot({
 							MIDIIn.connectAll;
 							MIDIdef.cc(\miid, {
 								arg val, num, chan, src;
-								//[chan, num, val].postln;
 								for(0,63,{
 									arg i;
 									if(
@@ -450,15 +446,26 @@ s.waitForBoot({
 		~gridClass.notNil
 	)
 	{
-	~gridClass.setAddCallback(
-		{
-			arg x,y;
-			128.do{
-				arg i;
-				AppClock.sched(0,{~comp[1].children[i].visible_(false)})
-			};
-		}
-	);
+		~gridClass.setAddCallback(
+			{
+				arg x,y;
+				128.do{
+					arg i;
+					AppClock.sched(0,{~comp[1].children[i].visible_(false)});
+					x = i%16;
+					y = (i-x)/16;
+					if(
+						y%2 == 1,
+						{
+							~draw.value(x,y)
+						},
+						{
+							~m.led(x,y,4)
+						}
+					);
+				};
+			}
+		);
 	~gridClass.setRemoveCallback(
 		{
 			128.do{
@@ -494,10 +501,12 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+16].play(~timer, quant: 4)
+						~a[i+16].play(~timer, quant: 4);
+						~step[i+16] = 1;
 					},
 					{
-						~a[i+16].stop
+						~a[i+16].stop;
+						~step[i+16] = 0;
 					}
 				)
 			}
@@ -528,10 +537,12 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+48].play(~timer, quant: 4)
+						~a[i+48].play(~timer, quant: 4);
+						~step[i+48] = 1;
 					},
 					{
-						~a[i+48].stop
+						~a[i+48].stop;
+						~step[i+48] = 0;
 					}
 				)
 			}
@@ -562,10 +573,12 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+80].play(~timer, quant: 4)
+						~a[i+80].play(~timer, quant: 4);
+						~step[i+80] = 1;
 					},
 					{
-						~a[i+80].stop
+						~a[i+80].stop;
+						~step[i+48] = 0;
 					}
 				)
 			}
@@ -596,10 +609,12 @@ s.waitForBoot({
 				if(
 					view.value == 0,
 					{
-						~a[i+112].play(~timer, quant:1)
+						~a[i+112].play(~timer, quant:4);
+						~step[i+112] = 1;
 					},
 					{
-						~a[i+112].stop
+						~a[i+112].stop;
+						~step[i+112] = 0;
 					}
 				)
 			}
@@ -679,11 +694,10 @@ s.waitForBoot({
 			arg buf=[0,1],
 			rate=1,
 			amp=1,
-			cutoff=1200,
-			cutoff2=1200,
+			cutoff=15000,
 			bus=~fb.index;
 			var sig;
-			sig = RLPF.ar(HPF.ar(PlayBuf.ar(1, buf, BufRateScale.ir(buf) * rate, doneAction:2),cutoff),cutoff2,0.25);
+			sig = RLPF.ar(PlayBuf.ar(1, buf, BufRateScale.ir(buf) * rate, doneAction:2),cutoff,0.25);
 			sig = sig * amp;
 			Out.ar(
 				bus,
@@ -770,7 +784,7 @@ s.waitForBoot({
 				Out.ar(bus,sig)
 			}).play(s, [\out, 0]);
 			s.sync;
-			6.do({arg i=0;
+			16.do({arg i;
 				~player.put(48+i, Synth(\PlayBufPlayer, [\bufnum, d[\n][i]]));
 			});
 		}).play;
@@ -780,116 +794,100 @@ s.waitForBoot({
 	~sound = Array.fill(64, {0});
 	~voices = [\1, \2, \3, \4, \5, \6, \7, \8];
 	~voiceManager = Array.fill(64, {PatternProxy(Pseq(~voices, inf)).asStream});
+	~durs = Array.fill(64, {0});
+	~modnums = Array.fill(64, {0});
+	~modenos = Array.fill(64, {0});
+	~attacks = Array.fill(64, {0});
+	~releases = Array.fill(64, {0});
 //mic
-	//{ Pan2.ar(SoundIn.ar(0)) }.play;
+/*	SynthDef(\mic,
+		{
+			arg out = 0,
+			bus = ~fb.index;
+			var sig;
+			sig = SoundIn.ar(bus);
+			sig = Pan2.ar(sig);
+			Out.ar(bus, sig)
+		}
+	).play(s, [\out, 0]);
+	s.sync;*/
 //modulators
-	48.do({
+	384.do({ //24 LFOs per synth voice
 		arg i;
 		if(
-			i < 9,
+			i < 128, //LFOs 0-127 are calibrated for panning
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2,16)).range(-1,1)
+					SinOsc.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
 				})
 			}
 		);
 		if(
-			(i > 8) && (i < 17),
+			(i > 127) && (i < 208), //LFOs 128-207 are calibrated for filter cutoff
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(500,15000)
+					SinOsc.kr(~timer.beatDur/rrand(2.0,512.0)).range(500,15000)
 				})
 			}
 		);
 		if(
-			(i > 16) && (i < 25),
+			(i > 207) && (i < 256), //LFOs 208-255 are calibrated for panning
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0,1)
+					SinOsc.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
 				})
 			}
 		);
 		if(
-			i > 24,
+			(i > 255) && (i < 336), //LFOs 256-383 are calibrated for filter resonance
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2,512)).range(0.3,0.5)
+					SinOsc.kr(~timer.beatDur/rrand(2.0,512.0)).range(0,3)
 				})
 			}
 		)
 	});
-
+	s.sync;
+	12.do({
+		arg i;
+		~player[48+i].set(\pan, Ndef((208+i).asSymbol))
+	});
 //sequences
 	//bank 1
 	(
 		~sound.put(0,
 			TriSin.new);
 		~sound[0].setParam('all',\bus,~fb.index);
-		48.do({
+		~sound[0].setParam('all',\reverb_amount,0.3); //synth 0's reverb amount is set to a constant 0.3
+		~sound[0].setParam('all',\room_size,0.4); //synth 0's room size is set to a constant 0.4
+		~sound[0].setParam('all',\damp,0.5); // synth 0's dampening is set to a constant 0.5
+		8.do({
 			arg i;
-			if(
-				i < 9,
-				{
-					~sound[0].setParam(((i%8)+1).asSymbol,\pan,Ndef(i.asSymbol));
-				}
-			);
-			if(
-				(i > 8) && (i < 17),
-				{
-					~sound[0].setParam(((i%8)+1).asSymbol,\cutoff,Ndef(i.asSymbol));
-				}
-			);
-			if(
-				(i > 16) && (i < 25),
-				{
-					~sound[0].setParam(((i%8)+1).asSymbol,\resonance,Ndef(i.asSymbol));
-				}
-			);
-			if(
-				i > 24,
-				{
-					if(
-						i < 33,
-						{
-							~sound[0].setParam(((i%8)+1).asSymbol,\reverb_amount,Ndef(i.asSymbol))
-						}
-					)
-				};
-				{
-					if(
-						(i > 32) && (i < 41),
-						{
-							~sound[0].setParam(((i%8)+1).asSymbol,\room_size,Ndef(i.asSymbol))
-						}
-					)
-				};
-				{
-					if(
-						i > 40,
-						{
-							~sound[0].setParam(((i%8)+1).asSymbol,\damp,Ndef(i.asSymbol))
-						}
-					)
-				}
-			)
+			~sound[0].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol)); //LFOs 0-7 modulate synth 0's pan position
+			~sound[0].setParam((i+1).asSymbol,\cutoff,Ndef((i+128).asSymbol)); //LFOs 128-135 modulate synth 0's filter cutoff
+			~sound[0].setParam((i+1).asSymbol,\resonance,Ndef((i+256).asSymbol)); //LFOs 256-263 modulate synth 0's filter resonance
 		});
 		~note.put(32,
 			PatternProxy(Pseq(~b, inf)));
 		~noted.put(32,
 			~note[32].asStream);
+		~modnums.put(0,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~modenos.put(0,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
 		~a.put(16,
 			Tdef(\task0, {
 				var delta, voice;
 				loop {
-					delta = ~timer.beatDur*rrand(8,10);
+					delta = rrand(2.0,6.0);
 					voice = ~voiceManager[0].next;
-					~sound[0].setParam(voice,\attack,rrand(2,10));
+					~sound[0].setParam(voice,\attack,rrand(2.0,10.0));
 					~sound[0].setParam(voice,\release,rrand(5,10));
 					~sound[0].setParam(voice,\amp,~idim[0]);
 					~sound[0].setParam(voice,\pan_slew,rrand(7,20));
 					~sound[0].setParam(voice,\index,~dimi[0].linlin(0,1,-24,24));
-					~sound[0].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
-					~sound[0].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
+					~sound[0].setParam(voice,\modnum,~modnums[0].next);
+					~sound[0].setParam(voice,\modeno,~modenos[0].next);
 					~sound[0].setParam(voice,\freq_slew,[0,0.1].choose);
 					~sound[0].setParam(voice,\cutoff_env,[0,1].choose);
 					~sound[0].trigger(voice,(~noted[32].next+[24,36].choose).midicps);
@@ -903,32 +901,39 @@ s.waitForBoot({
 		~sound.put(1,
 			SinSin.new);
 		~sound[1].setParam('all',\bus,~fb.index);
+		~sound[1].setParam('all',\reverb_amount,0.3);
+		~sound[1].setParam('all',\room_size,0.4);
+		~sound[1].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[1].setParam((i+1).asSymbol,\pan,Ndef(i+8.asSymbol)); //LFOs 8-15 modulate synth 1's pan position
+			~sound[1].setParam((i+1).asSymbol,\cutoff,Ndef((i+136).asSymbol)); //LFOs 136-143 modulate synth 1's filter cutoff
+			~sound[1].setParam((i+1).asSymbol,\resonance,Ndef((i+264).asSymbol)); //LFOs 264-271 modulate synth 1's filter resonance
+		});
 		~note.put(33,
 			PatternProxy(Pseq(~b.rotate(1), inf)));
 		~noted.put(33,
 			~note[33].asStream);
+		~modnums.put(1,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(1,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
 		~a.put(17,
 			Tdef(\task1, {
 				var delta, voice;
 				loop {
-					delta = ~timer.beatDur*2;
+					delta = rrand(2.0,6.0);
 					voice = ~voiceManager[1].next;
-					~sound[1].setParam(voice,\attack,rrand(0.005,0.01));
-					~sound[1].setParam(voice,\release,rrand(0.3,1));
+					~sound[1].setParam(voice,\attack,rrand(2.0,10.0));
+					~sound[1].setParam(voice,\release,rrand(5.0,10.0));
 					~sound[1].setParam(voice,\amp,~idim[1]);
-					~sound[1].setParam(voice,\pan,rrand(-0.8,0.8));
 					~sound[1].setParam(voice,\pan_slew,rrand(0.1,20.0));
 					~sound[1].setParam(voice,\index,~dimi[1].linlin(0,1,-24,24));
-					~sound[1].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
-					~sound[1].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
-					~sound[1].setParam(voice,\cutoff,rrand(500,7000).lag3(rrand(0.1,20.0)));
-					~sound[1].setParam(voice,\resonance,rrand(0,1).lag3(rrand(0.1,20.0)));
+					~sound[1].setParam(voice,\modnum,~modnums[1].next);
+					~sound[1].setParam(voice,\modeno,~modenos[1].next);
 					~sound[1].setParam(voice,\freq_slew,3);
 					~sound[1].setParam(voice,\cutoff_env,[0,1].choose);
-					~sound[1].setParam('all',\reverb_amount,rrand(0.3,0.5).lag3(rrand(0.1,1)));
-					~sound[1].setParam('all',\room_size,rrand(0.3,0.5).lag3(rrand(0.1,1)));
-					~sound[1].setParam('all',\damp,rrand(0.3,0.5).lag3(rrand(0.1,1)));
-					~sound[1].trigger(Pseq([\1,\2], inf).asStream.next,(~noted[33].next+36).midicps);
+					~sound[1].trigger(voice,(~noted[33].next+[24,36].choose).midicps);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -937,368 +942,577 @@ s.waitForBoot({
 
 	(
 		~sound.put(2,
-			SinSin.new);
+			TriSin.new);
 		~sound[2].setParam('all',\bus,~fb.index);
+		~sound[2].setParam('all',\reverb_amount,0.3);
+		~sound[2].setParam('all',\room_size,0.4);
+		~sound[2].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[2].setParam((i+1).asSymbol,\pan,Ndef(i+16.asSymbol)); //LFOs 16-23 modulate synth 2's pan position
+			~sound[2].setParam((i+1).asSymbol,\cutoff,Ndef((i+144).asSymbol)); //LFOs 144-151 modulate synth 2's filter cutoff
+			~sound[2].setParam((i+1).asSymbol,\resonance,Ndef((i+272).asSymbol)); //LFOs 272-279 modulate synth 2's filter resonance
+		});
 		~note.put(34,
 			PatternProxy(Pseq(~b.rotate(2), inf)));
 		~noted.put(34,
 			~note[34].asStream);
+		~modnums.put(2,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(2,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
 		~a.put(18,
 			Tdef(\task2, {
 				var delta, voice;
 				loop {
-					delta = ~timer.beatDur*4;
+					delta = ~noted[34].next+1;
 					voice = ~voiceManager[2].next;
-					~sound[2].setParam(voice,\attack,Pseq([0.005,0.007,0.25], inf).asStream.next);
-					~sound[2].setParam(voice,\release,Pseq([0.3,1.48,1], inf).asStream.next);
+					~sound[2].setParam(voice,\attack,1/(~noted[34].next+0.01));
+					~sound[2].setParam(voice,\release,1/(~noted[34].next+0.01));
 					~sound[2].setParam(voice,\amp,~idim[2]);
-					~sound[2].setParam(voice,\pan,rrand(-0.8,0.8));
 					~sound[2].setParam(voice,\pan_slew,rrand(0.1,20.0));
 					~sound[2].setParam(voice,\index,~dimi[2].linlin(0,1,-24,24));
-					~sound[2].setParam(voice,\modnum,Pseq([1,2,4,1], inf).asStream.next);
-					~sound[2].setParam(voice,\modeno,Pseq([1,2,1], inf).asStream.next);
-					~sound[2].setParam(voice,\cutoff,rrand(500,7000).lag3(rrand(0.1,20.0)));
-					~sound[2].setParam(voice,\resonance,rrand(0,1).lag3(rrand(0.1,20.0)));
+					~sound[2].setParam(voice,\modnum,~modnums[2].next);
+					~sound[2].setParam(voice,\modeno,~modenos[2].next);
 					~sound[2].setParam(voice,\freq_slew,[0,0.1].choose);
 					~sound[2].setParam(voice,\cutoff_env,[0,1].choose);
-					~sound[2].setParam('all',\reverb_amount,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
-					~sound[2].setParam('all',\room_size,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
-					~sound[2].setParam('all',\damp,rrand(0.3,0.5).lag3(rrand(0.1,20.0)));
-					~sound[2].trigger(voice,(~noted[33].next+36).midicps);
+					~sound[2].trigger(voice,(~noted[34].next+36).midicps);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
 		)
 	);
 
-	/*(
-		~note.put(34,
-			PatternProxy(Pseq(~b.rotate(2), inf)));
-		~a.put(18,
-			Pdef(
-				\sinepat2,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/2], inf),
-					\stretch, (~t*4),
-					\note, ~note[34],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.25], inf),
-					\rel, Pseq([0.3, 1.48, 1], inf),
-					\amp, Pdefn(2, Pseq([~idim[2]], inf)),
-					\pan, Pseq([0.8, -0.8], inf),
-					\index, Pdefn(66, Pseq([~dimi[2].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([2, 1, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
-		)
-	);*/
-
 	(
+		~sound.put(3,
+			SinSin.new);
+		~sound[3].setParam('all',\bus,~fb.index);
+		~sound[3].setParam('all',\reverb_amount,0.3);
+		~sound[3].setParam('all',\room_size,0.4);
+		~sound[3].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[3].setParam((i+1).asSymbol,\pan,Ndef(i+24.asSymbol)); //LFOs 24-31 modulate synth 3's pan position
+			~sound[3].setParam((i+1).asSymbol,\cutoff,Ndef((i+152).asSymbol)); //LFOs 152-159 modulate synth 3's filter cutoff
+			~sound[3].setParam((i+1).asSymbol,\resonance,Ndef((i+280).asSymbol)); //LFOs 280-287 modulate synth 3's filter resonance
+		});
 		~note.put(35,
 			PatternProxy(Pseq(~b.rotate(3), inf)));
+		~noted.put(35,
+			~note[35].asStream);
+		~modnums.put(3,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(3,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
 		~a.put(19,
-			Pdef(
-				\phrase,
-				Pbind(
-					\instrument, \ringer,
-					\dur, Pseq([1/4,1/8,1/8,1/4], inf),
-					\stretch, (~t*4),
-					\note, ~note[35],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.5, 1.5, 0.7, 1], inf),
-					\amp, Pdefn(3, Pseq([~idim[3]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(67, Pseq([~dimi[3].linlin(0,1,0,24)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task3, {
+				var delta, voice;
+				loop {
+					delta = ~noted[35].next+1;
+					voice = ~voiceManager[3].next;
+					~sound[3].setParam(voice,\attack,1/(~noted[35].next+0.01));
+					~sound[3].setParam(voice,\release,1/(~noted[35].next+0.01));
+					~sound[3].setParam(voice,\amp,~idim[3]);
+					~sound[3].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[3].setParam(voice,\index,~dimi[3].linlin(0,1,-24,24));
+					~sound[3].setParam(voice,\modnum,~modnums[3].next);
+					~sound[3].setParam(voice,\modeno,~modenos[3].next);
+					~sound[3].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[3].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[3].trigger(voice,(~noted[35].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(4,
+			TriSin.new);
+		~sound[4].setParam('all',\bus,~fb.index);
+		~sound[4].setParam('all',\reverb_amount,0.3);
+		~sound[4].setParam('all',\room_size,0.4);
+		~sound[4].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[4].setParam((i+1).asSymbol,\pan,Ndef(i+32.asSymbol)); //LFOs 32-39 modulate synth 4's pan position
+			~sound[4].setParam((i+1).asSymbol,\cutoff,Ndef((i+160).asSymbol)); //LFOs 160-167 modulate synth 4's filter cutoff
+			~sound[4].setParam((i+1).asSymbol,\resonance,Ndef((i+288).asSymbol)); //LFOs 288-295 modulate synth 4's filter resonance
+		});
 		~note.put(36,
 			PatternProxy(Pseq(~b.rotate(4), inf)));
+		~noted.put(36,
+			~note[36].asStream);
+		~modnums.put(4,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(4,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(4,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(4,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(20,
-			Pdef(
-				\sixteener,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/16], inf),
-					\stretch, (~t*4),
-					\note, ~note[36],
-					\gtranspose, -12,
-					\amp, Pdefn(4, Pseq([~idim[4]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(68, Pseq([~dimi[4].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([2, 1, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task4, {
+				var delta, voice;
+				loop {
+					delta = ~noted[36].next+1;
+					voice = ~voiceManager[4].next;
+					~sound[4].setParam(voice,\attack,~attacks[4].next);
+					~sound[4].setParam(voice,\release,~releases[4].next);
+					~sound[4].setParam(voice,\amp,~idim[4]);
+					~sound[4].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[4].setParam(voice,\index,~dimi[4].linlin(0,1,-24,24));
+					~sound[4].setParam(voice,\modnum,~modnums[4].next);
+					~sound[4].setParam(voice,\modeno,~modenos[4].next);
+					~sound[4].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[4].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[4].trigger(voice,(~noted[36].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(5,
+			SinSin.new);
+		~sound[5].setParam('all',\bus,~fb.index);
+		~sound[5].setParam('all',\reverb_amount,0.3);
+		~sound[5].setParam('all',\room_size,0.4);
+		~sound[5].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[5].setParam((i+1).asSymbol,\pan,Ndef(i+40.asSymbol)); //LFOs 40-47 modulate synth 5's pan position
+			~sound[5].setParam((i+1).asSymbol,\cutoff,Ndef((i+168).asSymbol)); //LFOs 168-175 modulate synth 5's filter cutoff
+			~sound[5].setParam((i+1).asSymbol,\resonance,Ndef((i+296).asSymbol)); //LFOs 296-303 modulate synth 5's filter resonance
+		});
 		~note.put(37,
 			PatternProxy(Pseq(~b.rotate(5), inf)));
+		~noted.put(37,
+			~note[37].asStream);
+		~modnums.put(5,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(5,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(5,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(5,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(21,
-			Pdef(
-				\trey,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/3], inf),
-					\stretch, (~t*4),
-					\note, ~note[37],
-					\gtranspose, -12,
-					\amp, Pdefn(5, Pseq([~idim[5]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(69, Pseq([~dimi[5].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([2, 1, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task5, {
+				var delta, voice;
+				loop {
+					delta = ~noted[37].next+1;
+					voice = ~voiceManager[5].next;
+					~sound[5].setParam(voice,\attack,~attacks[5].next);
+					~sound[5].setParam(voice,\release,~releases[5].next);
+					~sound[5].setParam(voice,\amp,~idim[5]);
+					~sound[5].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[5].setParam(voice,\index,~dimi[5].linlin(0,1,-24,24));
+					~sound[5].setParam(voice,\modnum,~modnums[5].next);
+					~sound[5].setParam(voice,\modeno,~modenos[5].next);
+					~sound[5].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[5].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[5].trigger(voice,(~noted[37].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(6,
+			Ringer.new);
+		~sound[6].setParam('all',\bus,~fb.index);
+		~sound[6].setParam('all',\reverb_amount,0.3);
+		~sound[6].setParam('all',\room_size,0.4);
+		~sound[6].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[6].setParam((i+1).asSymbol,\pan,Ndef(i+48.asSymbol)); //LFOs 48-55 modulate synth 6's pan position
+		});
 		~note.put(38,
 			PatternProxy(Pseq(~b.rotate(6), inf)));
+		~noted.put(38,
+			~note[38].asStream);
 		~a.put(22,
-			Pdef(
-				\fear,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/4], inf),
-					\stretch, (~t*4),
-					\note, ~note[38],
-					\gtranspose, -12,
-					\amp, Pdefn(6, Pseq([~idim[6]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(70, Pseq([~dimi[6].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1, 2, 1], inf),
-					\modeno, Pseq([2, 1, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task6, {
+				var delta, voice;
+				loop {
+					delta = ~noted[38].next+1;
+					voice = ~voiceManager[6].next;
+					~sound[6].setParam(voice,\amp,~idim[6]);
+					~sound[6].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[6].setParam(voice,\index,~dimi[6].linlin(0,1,0,24));
+					~sound[6].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[6].trigger(voice,(~noted[38].next+48).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(7,
+			Ringer.new);
+		~sound[7].setParam('all',\bus,~fb.index);
+		~sound[7].setParam('all',\reverb_amount,0.3);
+		~sound[7].setParam('all',\room_size,0.4);
+		~sound[7].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[7].setParam((i+1).asSymbol,\pan,Ndef(i+56.asSymbol)); //LFOs 56-63 modulate synth 7's pan position
+		});
 		~note.put(39,
 			PatternProxy(Pseq(~b.rotate(7), inf)));
+		~noted.put(39,
+			~note[39].asStream);
 		~a.put(23,
-			Pdef(
-				\slider,
-				PmonoArtic(
-					\slideSaw,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\note, ~note[39],
-					\gtranspose, -12,
-					\amp, Pdefn(7, Pseq([~idim[7]], inf)),
-					\legato, 1,
-					\freqlag, Pseq([0.1,0.3], inf),
-					\ffreq, Pdefn(71, Pseq([~dimi[7].linlin(0,1,100,4000)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task7, {
+				var delta, voice;
+				loop {
+					delta = ~noted[39].next+1;
+					voice = ~voiceManager[7].next;
+					~sound[6].setParam(voice,\amp,~idim[7]);
+					~sound[6].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[6].setParam(voice,\index,~dimi[7].linlin(0,1,0,24));
+					~sound[6].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[6].trigger(voice,(~noted[39].next+48).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(8,
+			TriSin.new);
+		~sound[8].setParam('all',\bus,~fb.index);
+		~sound[8].setParam('all',\reverb_amount,0.3);
+		~sound[8].setParam('all',\room_size,0.4);
+		~sound[8].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[8].setParam((i+1).asSymbol,\pan,Ndef(i+64.asSymbol)); //LFOs 64-71 modulate synth 4's pan position
+			~sound[8].setParam((i+1).asSymbol,\cutoff,Ndef((i+176).asSymbol)); //LFOs 176-183 modulate synth 4's filter cutoff
+			~sound[8].setParam((i+1).asSymbol,\resonance,Ndef((i+304).asSymbol)); //LFOs 304-311 modulate synth 4's filter resonance
+		});
 		~note.put(40,
 			PatternProxy(Pseq(~b.rotate(8), inf)));
+		~noted.put(40,
+			~note[40].asStream);
+		~durs.put(8,
+			PatternProxy(Pseq([2],inf)).asStream);
+		~modnums.put(8,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(8,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(8,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(8,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(24,
-			Pdef(
-				\sinepat3,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([Pseq([1/8],6), 1/4, Pseq([1/16],16)], inf),
-					\stretch, (~t*4),
-					\note, ~note[40],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(8, Pseq([~idim[8]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(72, Pseq([~dimi[8].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pseq([1, 2, 1, 4], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task8, {
+				var delta, voice;
+				loop {
+					delta = ~durs[8].next;
+					voice = ~voiceManager[8].next;
+					~sound[8].setParam(voice,\attack,~attacks[8].next);
+					~sound[8].setParam(voice,\release,~releases[8].next);
+					~sound[8].setParam(voice,\amp,~idim[8]);
+					~sound[8].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[8].setParam(voice,\index,~dimi[8].linlin(0,1,-24,24));
+					~sound[8].setParam(voice,\modnum,~modnums[8].next);
+					~sound[8].setParam(voice,\modeno,~modenos[8].next);
+					~sound[8].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[8].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[8].trigger(voice,(~noted[40].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(9,
+			SinSin.new);
+		~sound[9].setParam('all',\bus,~fb.index);
+		~sound[9].setParam('all',\reverb_amount,0.3);
+		~sound[9].setParam('all',\room_size,0.4);
+		~sound[9].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[9].setParam((i+1).asSymbol,\pan,Ndef(i+72.asSymbol)); //LFOs 72-79 modulate synth 4's pan position
+			~sound[9].setParam((i+1).asSymbol,\cutoff,Ndef((i+184).asSymbol)); //LFOs 184-191 modulate synth 4's filter cutoff
+			~sound[9].setParam((i+1).asSymbol,\resonance,Ndef((i+312).asSymbol)); //LFOs 312-319 modulate synth 4's filter resonance
+		});
 		~note.put(41,
 			PatternProxy(Pseq(~b.rotate(9), inf)));
+		~noted.put(41,
+			~note[41].asStream);
+		~durs.put(9,
+			PatternProxy(Pseq([3],inf)).asStream);
+		~modnums.put(9,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(9,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(9,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(9,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(25,
-			Pdef(
-				\anotherdrone,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pwhite(0.05,0.5, inf),
-					\stretch, (~t*4),
-					\note, ~note[41],
-					\gtranspose, -12,
-					\atk, Pwhite(2,3, inf),
-					\rel, Pwhite(5,10, inf),
-					\amp, Pdefn(9, Pseq([~idim[9]], inf)),
-					\pan, Pwhite(-0.8,0.8, inf),
-					\index, Pdefn(73, Pseq([~dimi[9].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2], inf),
-					\modeno, Pseq([1, 2, 1, 4], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task9, {
+				var delta, voice;
+				loop {
+					delta = ~durs[9].next;
+					voice = ~voiceManager[9].next;
+					~sound[9].setParam(voice,\attack,~attacks[9].next);
+					~sound[9].setParam(voice,\release,~releases[9].next);
+					~sound[9].setParam(voice,\amp,~idim[9]);
+					~sound[9].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[9].setParam(voice,\index,~dimi[9].linlin(0,1,-24,24));
+					~sound[9].setParam(voice,\modnum,~modnums[9].next);
+					~sound[9].setParam(voice,\modeno,~modenos[9].next);
+					~sound[9].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[9].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[9].trigger(voice,(~noted[41].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(10,
+			TriSin.new);
+		~sound[10].setParam('all',\bus,~fb.index);
+		~sound[10].setParam('all',\reverb_amount,0.3);
+		~sound[10].setParam('all',\room_size,0.4);
+		~sound[10].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[10].setParam((i+1).asSymbol,\pan,Ndef(i+80.asSymbol)); //LFOs 80-87 modulate synth 4's pan position
+			~sound[10].setParam((i+1).asSymbol,\cutoff,Ndef((i+192).asSymbol)); //LFOs 192-199 modulate synth 4's filter cutoff
+			~sound[10].setParam((i+1).asSymbol,\resonance,Ndef((i+320).asSymbol)); //LFOs 320-327 modulate synth 4's filter resonance
+		});
 		~note.put(42,
 			PatternProxy(Pseq(~b.rotate(10), inf)));
+		~noted.put(42,
+			~note[42].asStream);
+		~durs.put(10,
+			PatternProxy(Pseq([5],inf)).asStream);
+		~modnums.put(10,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(10,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(10,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(10,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(26,
-			Pdef(
-				\sinepat4,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[42]+1)*2],inf),
-					\stretch, (~t*4),
-					\note, ~note[42],
-					\gtranspose, -12,
-					\atk, Pseq([0.02, 0.07, 0.03, 0.05], inf),
-					\rel, Pseq([1,3,2],inf),
-					\amp, Pdefn(10, Pseq([~idim[10]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(74, Pseq([~dimi[10].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2], inf),
-					\modeno, Pseq([1, 4, 2], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task10, {
+				var delta, voice;
+				loop {
+					delta = ~durs[10].next;
+					voice = ~voiceManager[10].next;
+					~sound[10].setParam(voice,\attack,~attacks[10].next);
+					~sound[10].setParam(voice,\release,~releases[10].next);
+					~sound[10].setParam(voice,\amp,~idim[10]);
+					~sound[10].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[10].setParam(voice,\index,~dimi[10].linlin(0,1,-24,24));
+					~sound[10].setParam(voice,\modnum,~modnums[10].next);
+					~sound[10].setParam(voice,\modeno,~modenos[10].next);
+					~sound[10].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[10].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[10].trigger(voice,(~noted[42].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(11,
+			TriSin.new);
+		~sound[11].setParam('all',\bus,~fb.index);
+		~sound[11].setParam('all',\reverb_amount,0.3);
+		~sound[11].setParam('all',\room_size,0.4);
+		~sound[11].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[11].setParam((i+1).asSymbol,\pan,Ndef(i+88.asSymbol)); //LFOs 88-95 modulate synth 4's pan position
+			~sound[11].setParam((i+1).asSymbol,\cutoff,Ndef((i+200).asSymbol)); //LFOs 200-207 modulate synth 4's filter cutoff
+			~sound[11].setParam((i+1).asSymbol,\resonance,Ndef((i+328).asSymbol)); //LFOs 328-335 modulate synth 4's filter resonance
+		});
 		~note.put(43,
 			PatternProxy(Pseq(~b.rotate(11), inf)));
+		~noted.put(43,
+			~note[43].asStream);
+		~durs.put(11,
+			PatternProxy(Pseq([4,1,1,1,1],inf)).asStream);
+		~modnums.put(11,
+			PatternProxy(Pseq([1,2,1,4,2],inf)).asStream);
+		~modenos.put(11,
+			PatternProxy(Pseq([1,2,4,1],inf)).asStream);
+		~attacks.put(11,
+			PatternProxy(Pseq([0.01],inf)).asStream);
+		~releases.put(11,
+			PatternProxy(Pseq([2],inf)).asStream);
 		~a.put(27,
-			Pdef(
-				\sinepat5,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[43]+1)*4],inf),
-					\stretch, (~t*4),
-					\note, ~note[43],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(11, Pseq([~idim[11]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(75, Pseq([~dimi[11].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pseq([2, 1, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task11, {
+				var delta, voice;
+				loop {
+					delta = ~durs[11].next;
+					voice = ~voiceManager[11].next;
+					~sound[11].setParam(voice,\attack,~attacks[11].next);
+					~sound[11].setParam(voice,\release,~releases[11].next);
+					~sound[11].setParam(voice,\amp,~idim[11]);
+					~sound[11].setParam(voice,\pan_slew,rrand(0.1,20.0));
+					~sound[11].setParam(voice,\index,~dimi[11].linlin(0,1,-24,24));
+					~sound[11].setParam(voice,\modnum,~modnums[11].next);
+					~sound[11].setParam(voice,\modeno,~modenos[11].next);
+					~sound[11].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[11].setParam(voice,\cutoff_env,[0,1].choose);
+					~sound[11].trigger(voice,(~noted[43].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(12,
+			Ringer.new);
+		~sound[12].setParam('all',\bus,~fb.index);
+		~sound[12].setParam('all',\reverb_amount,0.3);
+		~sound[12].setParam('all',\room_size,0.4);
+		~sound[12].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[12].setParam((i+1).asSymbol,\pan,Ndef(i+96.asSymbol)); //LFOs 96-103 modulate synth 7's pan position
+		});
 		~note.put(44,
 			PatternProxy(Pseq(~b.rotate(12), inf)));
+		~noted.put(44,
+			~note[44].asStream);
+		~durs.put(12,
+			PatternProxy(Pseq([0.5],inf)).asStream);
 		~a.put(28,
-			Pdef(
-				\sinepat6,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/(~note[44]+1)*4],inf),
-					\stretch, (~t*4),
-					\note, ~note[44],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(12, Pseq([~idim[12]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(76, Pseq([~dimi[12].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pseq([2, 1, 2, 4], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task12, {
+				var delta, voice;
+				loop {
+					delta = ~durs[12].next;
+					voice = ~voiceManager[12].next;
+					~sound[12].setParam(voice,\amp,~idim[12]);
+					~sound[12].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[12].setParam(voice,\index,~dimi[12].linlin(0,1,0,24));
+					~sound[12].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[12].trigger(voice,(~noted[44].next+48).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(13,
+			Ringer.new);
+		~sound[13].setParam('all',\bus,~fb.index);
+		~sound[13].setParam('all',\reverb_amount,0.3);
+		~sound[13].setParam('all',\room_size,0.4);
+		~sound[13].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[13].setParam((i+1).asSymbol,\pan,Ndef(i+104.asSymbol)); //LFOs 104-111 modulate synth 7's pan position
+		});
 		~note.put(45,
 			PatternProxy(Pseq(~b.rotate(13), inf)));
+		~noted.put(45,
+			~note[45].asStream);
+		~durs.put(13,
+			PatternProxy(Pseq([0.25],inf)).asStream);
 		~a.put(29,
-			Pdef(
-				\phrase2,
-				Pbind(
-					\instrument, \ringer,
-					\dur, Pseq([1/(~note[45]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[45],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.007, 0.001, 0.05, 0.01], inf),
-					\amp, Pdefn(13, Pseq([~idim[13]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(77, Pseq([~dimi[13].linlin(0,1,-24,24)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task13, {
+				var delta, voice;
+				loop {
+					delta = ~durs[13].next;
+					voice = ~voiceManager[13].next;
+					~sound[13].setParam(voice,\amp,~idim[13]);
+					~sound[13].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[13].setParam(voice,\index,~dimi[13].linlin(0,1,0,24));
+					~sound[13].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[13].trigger(voice,(~noted[45].next+48).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(14,
+			Ringer.new);
+		~sound[14].setParam('all',\bus,~fb.index);
+		~sound[14].setParam('all',\reverb_amount,0.3);
+		~sound[14].setParam('all',\room_size,0.4);
+		~sound[14].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[14].setParam((i+1).asSymbol,\pan,Ndef(i+112.asSymbol)); //LFOs 112-119 modulate synth 7's pan position
+		});
 		~note.put(46,
 			PatternProxy(Pseq(~b.rotate(14), inf)));
+		~noted.put(46,
+			~note[46].asStream);
+		~durs.put(14,
+			PatternProxy(Pseq([0.75],inf)).asStream);
 		~a.put(30,
-			Pdef(
-				\trey2,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/(~note[46]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[46],
-					\gtranspose, -12,
-					\amp, Pdefn(14, Pseq([~idim[14]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(78, Pseq([~dimi[14].linlin(0,1,-24,24)], inf)),
-					\coef, Pseq([0.5],inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task14, {
+				var delta, voice;
+				loop {
+					delta = ~durs[14].next;
+					voice = ~voiceManager[14].next;
+					~sound[14].setParam(voice,\amp,~idim[14]);
+					~sound[14].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[14].setParam(voice,\index,~dimi[14].linlin(0,1,0,24));
+					~sound[14].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[14].trigger(voice,(~noted[46].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~sound.put(15,
+			Ringer.new);
+		~sound[15].setParam('all',\bus,~fb.index);
+		~sound[15].setParam('all',\reverb_amount,0.3);
+		~sound[15].setParam('all',\room_size,0.4);
+		~sound[15].setParam('all',\damp,0.5);
+		8.do({
+			arg i;
+			~sound[15].setParam((i+1).asSymbol,\pan,Ndef(i+120.asSymbol)); //LFOs 120-127 modulate synth 7's pan position
+		});
 		~note.put(47,
 			PatternProxy(Pseq(~b.rotate(15), inf)));
+		~noted.put(47,
+			~note[47].asStream);
+		~durs.put(15,
+			PatternProxy(Pseq([1.5],inf)).asStream);
 		~a.put(31,
-			Pdef(
-				\slider2,
-				PmonoArtic(
-					\slideSaw,
-					\dur, Pseq([(1/(~note[47]+1))*8],inf),
-					\stretch, (~t*4),
-					\note, ~note[47],
-					\gtranspose, -19,
-					\amp, Pdefn(15, Pseq([~idim[15]], inf)),
-					\legato, 1,
-					\freqlag, Pseq([0.1],inf),
-					\ffreq, Pdefn(79, Pseq([~dimi[15].linlin(0,1,100,4000)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task15, {
+				var delta, voice;
+				loop {
+					delta = ~durs[15].next;
+					voice = ~voiceManager[15].next;
+					~sound[15].setParam(voice,\amp,~idim[15]);
+					~sound[15].setParam(voice,\pan_slew,rrand(0.1,2));
+					~sound[15].setParam(voice,\index,~dimi[15].linlin(0,1,0,24));
+					~sound[15].setParam(voice,\freq_slew,[0,0.1].choose);
+					~sound[15].trigger(voice,(~noted[47].next+36).midicps);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
@@ -1306,974 +1520,1078 @@ s.waitForBoot({
 	//sample 1
 	(
 		~note.put(64,
-			PatternProxy(Pseq(~b.rotate(16), inf))); //16/80
+			PatternProxy(Pseq(~b.rotate(16), inf)));
 		~noted.put(64,
 			~note[64].asStream);
 		~a.put(48,
-			Task({
+			Tdef(\task16, {
 				var delta, starter, ender;
 				loop {
-					delta = ~t*(~noted[64].next+1);
+					delta = ~noted[64].next+1;
 					starter = ~noted[64].next.linlin(0,32,0,1);
-					ender = starter+0.01;
-					~player[48].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
+					ender = starter+~idim[17].linlin(0,1,0.01,0.1);
+					~player[48].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[16],\bus,~fb.index);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(65,
-			PatternProxy(Pseq(~b.rotate(17), inf))); //17/81
+			PatternProxy(Pseq(~b.rotate(17), inf)));
 		~noted.put(65,
 			~note[65].asStream);
 		~a.put(49,
-			Task({
+			Tdef(\task17, {
 				var delta, scaledtime;
 				loop {
-					delta = ~t*(~noted[65].next+1);
+					delta = ~noted[65].next+1;
 					scaledtime = ~noted[65].next.linlin(0,32,-2,2);
 					~player[48].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
-		)
-	);
-
-	(
-		~note.put(66,
-			PatternProxy(Pseq(~b.rotate(18), inf))); //18/82
-		~noted.put(66,
-			~note[66].asStream);
-		~a.put(50,
-			Task({
-				var delta, panner;
-				loop {
-					delta = ~t*(~noted[66].next+1);
-					panner = ~noted[66].next.linlin(0,32,-1,1);
-					~player[48].set(\pan, panner);
-					delta.yield;
-				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	//sample 2
 	(
+		~note.put(66,
+			PatternProxy(Pseq(~b.rotate(18), inf)));
+		~noted.put(66,
+			~note[66].asStream);
+		~a.put(50,
+			Tdef(\task18, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[66].next+1;
+					starter = ~noted[66].next.linlin(0,32,0,1);
+					ender = starter+~idim[19].linlin(0,1,0.01,0.1);
+					~player[49].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[18],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+	(
 		~note.put(67,
-			PatternProxy(Pseq(~b.rotate(19), inf))); //19/83
+			PatternProxy(Pseq(~b.rotate(19), inf)));
 		~noted.put(67,
 			~note[67].asStream);
 		~a.put(51,
-			Task({
-				var delta, starter, ender;
-				loop {
-					delta = ~t*4;
-					starter = ~noted[67].next.linlin(0,32,0,1);
-					ender = starter+0.01;
-					~player[49].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
-					delta.yield;
-				}
-			})
-		)
-	);
-
-	(
-		~note.put(68,
-			PatternProxy(Pseq(~b.rotate(20), inf))); //20/84
-		~noted.put(68,
-			~note[68].asStream);
-		~a.put(52,
-			Task({
+			Tdef(\task19, {
 				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
-					scaledtime = ~noted[68].next.linlin(0,32,-2,2);
-					~player[49].set(\pan, scaledtime);
+					delta = ~noted[67].next+1;
+					scaledtime = ~noted[67].next.linlin(0,32,-2,2);
+					~player[49].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
-		)
-	);
-
-	(
-		~note.put(69,
-			PatternProxy(Pseq(~b.rotate(21), inf))); //21/85
-		~noted.put(69,
-			~note[69].asStream);
-		~a.put(53,
-			Task({
-				var delta, panner;
-				loop {
-					delta = ~t*4;
-					panner = ~noted[69].next.linlin(0,32,-1,1);
-					~player[49].set(\pan, panner);
-					delta.yield;
-				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	//sample 3
 	(
+		~note.put(68,
+			PatternProxy(Pseq(~b.rotate(20), inf)));
+		~noted.put(68,
+			~note[68].asStream);
+		~a.put(52,
+			Tdef(\task20, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[68].next+1;
+					starter = ~noted[68].next.linlin(0,32,0,1);
+					ender = starter+~idim[21].linlin(0,1,0.01,0.1);
+					~player[50].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[20],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+	(
+		~note.put(69,
+			PatternProxy(Pseq(~b.rotate(21), inf)));
+		~noted.put(69,
+			~note[69].asStream);
+		~a.put(53,
+			Tdef(\task21, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[69].next+1;
+					scaledtime = ~noted[69].next.linlin(0,32,-2,2);
+					~player[50].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+	//sample 4
+		(
 		~note.put(70,
-			PatternProxy(Pseq(~b.rotate(22), inf))); //22/86
+			PatternProxy(Pseq(~b.rotate(22), inf)));
 		~noted.put(70,
 			~note[70].asStream);
 		~a.put(54,
-			Task({
+			Tdef(\task22, {
 				var delta, starter, ender;
 				loop {
-					delta = ~t*(~noted[70].next+1);
+					delta = ~noted[70].next+1;
 					starter = ~noted[70].next.linlin(0,32,0,1);
-					ender = starter+0.06;
-					~player[50].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.7,\bus,~fb.index);
+					ender = starter+~idim[23].linlin(0,1,0.01,0.1);
+					~player[51].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[22],\bus,~fb.index);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(71,
-			PatternProxy(Pseq(~b.rotate(23), inf))); //23/87
+			PatternProxy(Pseq(~b.rotate(23), inf)));
 		~noted.put(71,
 			~note[71].asStream);
 		~a.put(55,
-			Task({
+			Tdef(\task23, {
 				var delta, scaledtime;
 				loop {
-					delta = ~t*(~noted[71].next+1);
+					delta = ~noted[71].next+1;
 					scaledtime = ~noted[71].next.linlin(0,32,-2,2);
-					~player[50].set(\rate, scaledtime);
+					~player[51].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
-	//sample 4
+		//sample 5
 	(
 		~note.put(72,
-			PatternProxy(Pseq(~b.rotate(24), inf))); //24/88
+			PatternProxy(Pseq(~b.rotate(24), inf)));
 		~noted.put(72,
 			~note[72].asStream);
 		~a.put(56,
-			Task({
+			Tdef(\task24, {
 				var delta, starter, ender;
 				loop {
-					delta = ~t*4;
+					delta = ~noted[72].next+1;
 					starter = ~noted[72].next.linlin(0,32,0,1);
-					ender = starter+0.01;
-					~player[51].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
+					ender = starter+~idim[25].linlin(0,1,0.01,0.1);
+					~player[52].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[24],\bus,~fb.index);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(73,
-			PatternProxy(Pseq(~b.rotate(25), inf))); //25/89
+			PatternProxy(Pseq(~b.rotate(25), inf)));
 		~noted.put(73,
 			~note[73].asStream);
 		~a.put(57,
-			Task({
+			Tdef(\task25, {
 				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
+					delta = ~noted[73].next+1;
 					scaledtime = ~noted[73].next.linlin(0,32,-2,2);
-					~player[51].set(\rate, scaledtime);
-					delta.yield;
-				}
-			})
-		)
-	);
-
-	(
-		~note.put(74,
-			PatternProxy(Pseq(~b.rotate(26), inf))); //26/90
-		~noted.put(74,
-			~note[74].asStream);
-		~a.put(58,
-			Task({
-				var delta, panner;
-				loop {
-					delta = ~t*4;
-					panner = ~noted[74].next.linlin(0,32,-1,1);
-					~player[51].set(\pan, panner);
-					delta.yield;
-				}
-			})
-		)
-	);
-
-	//sample 5
-	(
-		~note.put(75,
-			PatternProxy(Pseq(~b.rotate(27), inf))); //27/91
-		~noted.put(75,
-			~note[75].asStream);
-		~a.put(59,
-			Task({
-				var delta, starter, ender;
-				loop {
-					delta = ~t*4;
-					starter = ~noted[75].next.linlin(0,32,0,1);
-					ender = starter+0.01;
-					~player[52].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.2,\bus,~fb.index);
-					delta.yield;
-				}
-			})
-		)
-	);
-
-	(
-		~note.put(76,
-			PatternProxy(Pseq(~b.rotate(28), inf))); //28/92
-		~noted.put(76,
-			~note[76].asStream);
-		~a.put(60,
-			Task({
-				var delta, scaledtime;
-				loop {
-					delta = ~t*4;
-					scaledtime = ~noted[76].next.linlin(0,32,-2,2);
 					~player[52].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+			//sample 6
+	(
+		~note.put(74,
+			PatternProxy(Pseq(~b.rotate(26), inf)));
+		~noted.put(74,
+			~note[74].asStream);
+		~a.put(58,
+			Tdef(\task26, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[74].next+1;
+					starter = ~noted[74].next.linlin(0,32,0,1);
+					ender = starter+~idim[27].linlin(0,1,0.01,0.1);
+					~player[53].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[26],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+	(
+		~note.put(75,
+			PatternProxy(Pseq(~b.rotate(27), inf)));
+		~noted.put(75,
+			~note[75].asStream);
+		~a.put(59,
+			Tdef(\task27, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[75].next+1;
+					scaledtime = ~noted[75].next.linlin(0,32,-2,2);
+					~player[53].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
+		)
+	);
+
+			//sample 7
+	(
+		~note.put(76,
+			PatternProxy(Pseq(~b.rotate(28), inf)));
+		~noted.put(76,
+			~note[76].asStream);
+		~a.put(60,
+			Tdef(\task28, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[76].next+1;
+					starter = ~noted[76].next.linlin(0,32,0,1);
+					ender = starter+~idim[29].linlin(0,1,0.01,0.1);
+					~player[54].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[28],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(77,
-			PatternProxy(Pseq(~b.rotate(29), inf))); //29/93
+			PatternProxy(Pseq(~b.rotate(29), inf)));
 		~noted.put(77,
 			~note[77].asStream);
 		~a.put(61,
-			Task({
-				var delta, panner;
+			Tdef(\task29, {
+				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
-					panner = ~noted[77].next.linlin(0,32,-1,1);
-					~player[52].set(\pan, panner);
+					delta = ~noted[77].next+1;
+					scaledtime = ~noted[77].next.linlin(0,32,-2,2);
+					~player[54].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
-	//sample 6
+			//sample 8
 	(
 		~note.put(78,
-			PatternProxy(Pseq(~b.rotate(30), inf))); //30/94
+			PatternProxy(Pseq(~b.rotate(30), inf)));
 		~noted.put(78,
 			~note[78].asStream);
 		~a.put(62,
-			Task({
+			Tdef(\task30, {
 				var delta, starter, ender;
 				loop {
-					delta = ~t*4;
+					delta = ~noted[78].next+1;
 					starter = ~noted[78].next.linlin(0,32,0,1);
-					ender = starter+0.06;
-					~player[53].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,0.7,\bus,~fb.index);
+					ender = starter+~idim[31].linlin(0,1,0.01,0.1);
+					~player[55].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[30],\bus,~fb.index);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(79,
-			PatternProxy(Pseq(~b.rotate(31), inf))); //31/95
+			PatternProxy(Pseq(~b.rotate(31), inf)));
 		~noted.put(79,
 			~note[79].asStream);
 		~a.put(63,
-			Task({
+			Tdef(\task31, {
 				var delta, scaledtime;
 				loop {
-					delta = ~t*4;
-					scaledtime = ~noted[79].next.linlin(0,32,-2,2);
-					~player[53].set(\rate, scaledtime);
+					delta = ~noted[79].next+1;
+					scaledtime = ~noted[79].next.linlin(0,32,-2.0,2.0);
+					~player[55].set(\rate, scaledtime);
 					delta.yield;
 				}
-			})
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	//bank 3
+	//sample 1
 	(
 		~note.put(96,
 			PatternProxy(Pseq(~b.rotate(32), inf)));
+		~noted.put(96,
+			~note[96].asStream);
 		~a.put(80,
-			Pdef(
-				\Adrone,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pwhite(0.05,0.5, inf),
-					\stretch, (~t*4),
-					\note, ~note[96],
-					\gtranspose, -12,
-					\atk, Pwhite(2,3, inf),
-					\rel, Pwhite(5,10, inf),
-					\amp, Pdefn(32, Pseq([~idim[32]], inf)),
-					\pan, Pwhite(-0.8,0.8, inf),
-					\index, Pdefn(96, Pseq([~dimi[32].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4, 2], inf),
-					\modeno, Pseq([1, 4, 2], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task32, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[96].next+1;
+					starter = ~noted[96].next.linlin(0,32,0,1);
+					ender = starter+~idim[33].linlin(0,1,0.01,0.1);
+					~player[56].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[32],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(97,
 			PatternProxy(Pseq(~b.rotate(33), inf)));
+		~noted.put(97,
+			~note[81].asStream);
 		~a.put(81,
-			Pdef(
-				\Asinepat,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\note, ~note[97],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pdefn(33, Pseq([~idim[33]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(97, Pseq([~dimi[33].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pseq([1, 4, 2, 4],inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task33, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[97].next+1;
+					scaledtime = ~noted[97].next.linlin(0,32,-2,2);
+					~player[56].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+	//sample 2
 	(
 		~note.put(98,
 			PatternProxy(Pseq(~b.rotate(34), inf)));
+		~noted.put(98,
+			~note[98].asStream);
 		~a.put(82,
-			Pdef(
-				\Asinepat2,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/2], inf),
-					\stretch, (~t*4),
-					\note, ~note[98],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.25], inf),
-					\rel, Pseq([0.3, 1.48, 1], inf),
-					\amp, Pdefn(34, Pseq([~idim[34]], inf)),
-					\pan, Pseq([0.8, -0.8], inf),
-					\index, Pdefn(98, Pseq([~dimi[34].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([1, 2, 4, 2], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task34, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[98].next+1;
+					starter = ~noted[98].next.linlin(0,32,0,1);
+					ender = starter+~idim[35].linlin(0,1,0.01,0.1);
+					~player[57].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[34],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(99,
 			PatternProxy(Pseq(~b.rotate(35), inf)));
+		~noted.put(99,
+			~note[99].asStream);
 		~a.put(83,
-			Pdef(
-				\Aphrase,
-				Pbind(
-					\instrument, \ringer,
-					\dur, Pseq([1/4,1/8,1/8], inf),
-					\stretch, (~t*4),
-					\note, ~note[99],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.1, 0.15, 0.2, 0.1], inf),
-					\amp, Pdefn(35, Pseq([~idim[35]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(99, Pseq([~dimi[35].linlin(0,1,-24,24)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task35, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[99].next+1;
+					scaledtime = ~noted[99].next.linlin(0,32,-2,2);
+					~player[57].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+	//sample 3
 	(
 		~note.put(100,
 			PatternProxy(Pseq(~b.rotate(36), inf)));
+		~noted.put(100,
+			~note[100].asStream);
 		~a.put(84,
-			Pdef(
-				\Asixteener,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/16], inf),
-					\stretch, (~t*4),
-					\note, ~note[100],
-					\gtranspose, -12,
-					\amp, Pdefn(36, Pseq([~idim[36]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(100, Pseq([~dimi[36].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([1, 2, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task36, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[100].next+1;
+					starter = ~noted[100].next.linlin(0,32,0,1);
+					ender = starter+~idim[37].linlin(0,1,0.01,0.1);
+					~player[58].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[36],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(101,
 			PatternProxy(Pseq(~b.rotate(37), inf)));
+		~noted.put(101,
+			~note[101].asStream);
 		~a.put(85,
-			Pdef(
-				\Atrey,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/3], inf),
-					\stretch, (~t*4),
-					\note, ~note[101],
-					\gtranspose, -12,
-					\amp, Pdefn(37, Pseq([~idim[37]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(101, Pseq([~dimi[37].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([1, 2, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task37, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[101].next+1;
+					scaledtime = ~noted[101].next.linlin(0,32,-2,2);
+					~player[58].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
-	(
+	//sample 4
+		(
 		~note.put(102,
 			PatternProxy(Pseq(~b.rotate(38), inf)));
+		~noted.put(102,
+			~note[102].asStream);
 		~a.put(86,
-			Pdef(
-				\Afear,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/4], inf),
-					\stretch, (~t*4),
-					\note, ~note[102],
-					\gtranspose, -12,
-					\amp, Pdefn(38, Pseq([~idim[38]], inf)),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(102, Pseq([~dimi[38].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([2, 4, 1], inf),
-					\modeno, Pseq([1, 2, 4, 1], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task38, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[102].next+1;
+					starter = ~noted[102].next.linlin(0,32,0,1);
+					ender = starter+~idim[39].linlin(0,1,0.01,0.1);
+					~player[59].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[38],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(103,
 			PatternProxy(Pseq(~b.rotate(39), inf)));
+		~noted.put(103,
+			~note[103].asStream);
 		~a.put(87,
-			Pdef(
-				\Aslider,
-				PmonoArtic(
-					\slideSaw,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\note, ~note[103],
-					\gtranspose, -12,
-					\amp, Pdefn(39, Pseq([~idim[39]], inf)),
-					\legato, 1,
-					\freqlag, Pseq([0.1,0.01,0.2],inf),
-					\ffreq, Pdefn(103, Pseq([~dimi[103].linlin(0,1,100,4000)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task39, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[103].next+1;
+					scaledtime = ~noted[103].next.linlin(0,32,-2,2);
+					~player[59].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+		//sample 5
 	(
 		~note.put(104,
 			PatternProxy(Pseq(~b.rotate(40), inf)));
+		~noted.put(104,
+			~note[104].asStream);
 		~a.put(88,
-			Pdef(
-				\Asinepat3,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([Pseq([1/8],6), 1/4, Pseq([1/16],16)], inf),
-					\stretch, (~t*4),
-					\note, ~note[104],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\72, Pseq([~idim[72].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pdefn(\88, Pseq([~idim[88].linlin(0,1,1,4)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task40, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[104].next+1;
+					starter = ~noted[104].next.linlin(0,32,0,1);
+					ender = starter+~idim[41].linlin(0,1,0.01,0.1);
+					~player[60].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[40],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(105,
 			PatternProxy(Pseq(~b.rotate(41), inf)));
+		~noted.put(105,
+			~note[105].asStream);
 		~a.put(89,
-			Pdef(
-				\Aanotherdrone,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pwhite(0.05,0.5, inf),
-					\stretch, (~t*4),
-					\note, ~note[105],
-					\gtranspose, -12,
-					\atk, Pwhite(2,3, inf),
-					\rel, Pwhite(5,10, inf),
-					\amp, Pwhite(0.01,0.1, inf),
-					\pan, Pwhite(-0.8,0.8, inf),
-					\index, Pdefn(\73, Pseq([~idim[73].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2], inf),
-					\modeno, Pdefn(\89, Pseq([~idim[89].linlin(0,1,1,4)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task41, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[105].next+1;
+					scaledtime = ~noted[105].next.linlin(0,32,-2,2);
+					~player[60].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+			//sample 6
 	(
 		~note.put(106,
 			PatternProxy(Pseq(~b.rotate(42), inf)));
+		~noted.put(106,
+			~note[106].asStream);
 		~a.put(90,
-			Pdef(
-				\Asinepat4,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[106]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[106],
-					\gtranspose, -12,
-					\atk, Pdefn(\74, Pseq([~idim[74].linlin(0,1,0.01,10)], inf)),
-					\rel, Pdefn(\90, Pseq([~idim[90].linlin(0,1,0.01,10)], inf)),
-					\amp, Pseq([0.02, 0.07, 0.03, 0.05], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task42, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[106].next+1;
+					starter = ~noted[106].next.linlin(0,32,0,1);
+					ender = starter+~idim[43].linlin(0,1,0.01,0.1);
+					~player[61].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[42],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(107,
 			PatternProxy(Pseq(~b.rotate(43), inf)));
+		~noted.put(107,
+			~note[107].asStream);
 		~a.put(91,
-			Pdef(
-				\Asinepat5,
-				Pbind(
-					\instrument, \sinsin,
-					\dur, Pseq([1/(~note[107]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[107],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\75, Pseq([~idim[75].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pdefn(\91, Pseq([~idim[91].linlin(0,1,1,4)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task43, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[107].next+1;
+					scaledtime = ~noted[107].next.linlin(0,32,-2,2);
+					~player[61].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+			//sample 7
 	(
 		~note.put(108,
 			PatternProxy(Pseq(~b.rotate(44), inf)));
+		~noted.put(108,
+			~note[108].asStream);
 		~a.put(92,
-			Pdef(
-				\Asinepat6,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/(~note[108]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[108],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pseq([0.3, 0.48, 1], inf),
-					\amp, Pseq([0.05, 0.1, 0.1, 0.05], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\76, Pseq([~idim[76].linlin(0,1,-24,24)], inf)),
-					\modnum, Pseq([1, 2, 4], inf),
-					\modeno, Pdefn(\92, Pseq([~idim[92].linlin(0,1,1,4)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task44, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[108].next+1;
+					starter = ~noted[108].next.linlin(0,32,0,1);
+					ender = starter+~idim[45].linlin(0,1,0.01,0.1);
+					~player[62].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[44],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(109,
 			PatternProxy(Pseq(~b.rotate(45), inf)));
+		~noted.put(109,
+			~note[109].asStream);
 		~a.put(93,
-			Pdef(
-				\Aphrase2,
-				Pbind(
-					\instrument, \ringer,
-					\dur, Pseq([1/(~note[109]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[109],
-					\gtranspose, -12,
-					\atk, Pseq([0.005, 0.007, 0.01], inf),
-					\rel, Pdefn(\93, Pseq([~idim[93].linlin(0,1,1,4)], inf)),
-					\amp, Pseq([0.1, 0.15, 0.2, 0.1], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\77, Pseq([~idim[77].linlin(0,1,-24,24)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task45, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[109].next+1;
+					scaledtime = ~noted[109].next.linlin(0,32,-2,2);
+					~player[62].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
+			//sample 8
 	(
 		~note.put(110,
 			PatternProxy(Pseq(~b.rotate(46), inf)));
+		~noted.put(110,
+			~note[110].asStream);
 		~a.put(94,
-			Pdef(
-				\Atrey2,
-				Pbind(
-					\instrument, \trisin,
-					\dur, Pseq([1/(~note[110]+1)],inf),
-					\stretch, (~t*4),
-					\note, ~note[110],
-					\gtranspose, -12,
-					\amp, Pseq([0.4, 0.6, 0.4, 0.5], inf),
-					\pan, Pseq([-0.8, 0.8], inf),
-					\index, Pdefn(\78, Pseq([~idim[78].linlin(0,1,-24,24)], inf)),
-					\coef, Pdefn(\94, Pseq([~idim[94]], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task46, {
+				var delta, starter, ender;
+				loop {
+					delta = ~noted[110].next+1;
+					starter = ~noted[110].next.linlin(0,32,0,1);
+					ender = starter+~idim[47].linlin(0,1,0.01,0.1);
+					~player[63].set(\t_trig,1,\start,starter,\end,ender,\loops,1,\amp,~idim[46],\bus,~fb.index);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
 		~note.put(111,
 			PatternProxy(Pseq(~b.rotate(47), inf)));
+		~noted.put(111,
+			~note[111].asStream);
 		~a.put(95,
-			Pdef(
-				\Aslider2,
-				PmonoArtic(
-					\slideSaw,
-					\dur, Pseq([(1/(~note[111]+1))*8],inf),
-					\stretch, (~t*4),
-					\note, ~note[111],
-					\gtranspose, -12,
-					\legato, 1,
-					\freqlag, Pdefn(\79, Pseq([~idim[79].linlin(0,1,0,0.3)], inf)),
-					\ffreq, Pdefn(\95, Pseq([~idim[95].linlin(0,1,100,4000)], inf)),
-					\bus, ~fb.index
-				);
-			).quant_(~t*4)
+			Tdef(\task47, {
+				var delta, scaledtime;
+				loop {
+					delta = ~noted[111].next+1;
+					scaledtime = ~noted[111].next.linlin(0,32,-2,2);
+					~player[63].set(\rate, scaledtime);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	//bank 4
+	~bufs = Array.fill(16,{0});
+	~rates = Array.fill(16,{0});
+	~amps = Array.fill(16, {0});
+
 	(
+		~durs.put(16,
+			PatternProxy(Pseq([1/4],inf)).asStream);
+		~bufs.put(0,
+			PatternProxy(Pseq([d[\l][1], d[\m][3], d[\h][1]], inf)).asStream);
+		~rates.put(0,
+			PatternProxy(Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf)).asStream);
+		~amps.put(0,
+			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(112,
-			Pdef(
-				\rhythm,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
-					\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\cutoff2, Pdefn(\96, Pseq([~idim[96].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\112, Pseq([~idim[112].linlin(0,1,0.1,10000)], inf)),
-					\bus, ~fb.index
-				);
-			)
+			Tdef(\task48, {
+				var delta;
+				loop {
+					delta = ~durs[16].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[0].next,
+							\rate: ~rates[0].next,
+							\amp: ~amps[0].next*~idim[48],
+							\cutoff: ~dimi[48].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(17,
+			PatternProxy(Pseq([2],inf)).asStream);
+		~bufs.put(1,
+			PatternProxy(Pseq([d[\zk][1], d[\zs][0]], inf)).asStream);
+		~rates.put(1,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(1,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(113,
-			Pdef(
-				\kicksnare,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/2], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
-					\rate, Pseq([1], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\97, Pseq([~idim[97].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\113, Pseq([~idim[113].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task49, {
+				var delta;
+				loop {
+					delta = ~durs[17].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[1].next,
+							\rate: ~rates[1].next,
+							\amp: ~amps[1].next*~idim[49],
+							\cutoff: ~dimi[49].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(18,
+			PatternProxy(Pseq([1/4, 1/4, 6/4, 1/3, 1/3, 4/3, 1/4, 1/4, 6/4, 1/3, 1/3, 1/3, 1/3, 2/3], inf)).asStream);
+		~bufs.put(2,
+			PatternProxy(Prand(d[\zm], inf)).asStream);
+		~rates.put(2,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(2,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(114,
-			Pdef(
-				\metals,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zm], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\98, Pseq([~idim[98].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\114, Pseq([~idim[114].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task50, {
+				var delta;
+				loop {
+					delta = ~durs[18].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[2].next,
+							\rate: ~rates[2].next,
+							\amp: ~amps[2].next*~idim[50],
+							\cutoff: ~dimi[50].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(19,
+			PatternProxy(Pseq([1/4], inf)).asStream);
+		~bufs.put(3,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(3,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(3,
+			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(115,
-			Pdef(
-				\percs,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\99, Pseq([~idim[99].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\115, Pseq([~idim[115].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task51, {
+				var delta;
+				loop {
+					delta = ~durs[19].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[3].next,
+							\rate: ~rates[3].next,
+							\amp: ~amps[3].next*~idim[51],
+							\cutoff: ~dimi[51].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(20,
+			PatternProxy(Pseq([1/4, 1/4, 1/4, 3/2, 1/4, 1/4, 1/4], inf)).asStream);
+		~bufs.put(4,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(4,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(4,
+			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(116,
-			Pdef(
-				\altmetal,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\100, Pseq([~idim[100].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\116, Pseq([~idim[116].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task52, {
+				var delta;
+				loop {
+					delta = ~durs[20].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[4].next,
+							\rate: ~rates[4].next,
+							\amp: ~amps[4].next*~idim[52],
+							\cutoff: ~dimi[52].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(21,
+			PatternProxy(Pseq([1/4, 1/4, 1/4, 3/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], inf)).asStream);
+		~bufs.put(5,
+			PatternProxy(Pseq([d[\l][1], d[\m][3], d[\h][1]], inf)).asStream);
+		~rates.put(5,
+			PatternProxy(Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf)).asStream);
+		~amps.put(5,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(117,
-			Pdef(
-				\rhythm1,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
-					\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\cutoff2, Pdefn(\101, Pseq([~idim[101].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\117, Pseq([~idim[117].linlin(0,1,0.1,10000)], inf)),
-					\bus, ~fb.index
-				);
-			)
+			Tdef(\task53, {
+				var delta;
+				loop {
+					delta = ~durs[21].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[5].next,
+							\rate: ~rates[5].next,
+							\amp: ~amps[5].next*~idim[53],
+							\cutoff: ~dimi[53].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(22,
+			PatternProxy(Pseq([1/2], inf)).asStream);
+		~bufs.put(6,
+			PatternProxy(Pseq([d[\zk][4]], inf)).asStream);
+		~rates.put(6,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(6,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(118,
-			Pdef(
-				\kicksnare1,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/2], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
-					\rate, Pseq([1], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\102, Pseq([~idim[102].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\118, Pseq([~idim[118].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task54, {
+				var delta;
+				loop {
+					delta = ~durs[22].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[6].next,
+							\rate: ~rates[6].next,
+							\amp: ~amps[6].next*~idim[54],
+							\cutoff: ~dimi[54].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(23,
+			PatternProxy(Pseq([1, 5, 1, 1/2, 1/2], inf)).asStream);
+		~bufs.put(7,
+			PatternProxy(Prand(d[\zm], inf)).asStream);
+		~rates.put(7,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(7,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(119,
-			Pdef(
-				\metals1,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zm], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\103, Pseq([~idim[103].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\119, Pseq([~idim[119].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task55, {
+				var delta;
+				loop {
+					delta = ~durs[23].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[7].next,
+							\rate: ~rates[7].next,
+							\amp: ~amps[7].next*~idim[55],
+							\cutoff: ~dimi[55].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(24,
+			PatternProxy(Pseq([1, 1/2, 1/2, 1, 5], inf)).asStream);
+		~bufs.put(8,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(8,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(8,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(120,
-			Pdef(
-				\percs1,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\104, Pseq([~idim[104].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\120, Pseq([~idim[120].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task56, {
+				var delta;
+				loop {
+					delta = ~durs[24].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[8].next,
+							\rate: ~rates[8].next,
+							\amp: ~amps[8].next*~idim[56],
+							\cutoff: ~dimi[56].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(25,
+			PatternProxy(Pseq([1/2, 1/2, 1, 5, 1], inf)).asStream);
+		~bufs.put(9,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(9,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(9,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(121,
-			Pdef(
-				\altmetal1,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\105, Pseq([~idim[105].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\121, Pseq([~idim[121].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task57, {
+				var delta;
+				loop {
+					delta = ~durs[25].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[9].next,
+							\rate: ~rates[9].next,
+							\amp: ~amps[9].next*~idim[57],
+							\cutoff: ~dimi[57].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(26,
+			PatternProxy(Pseq([1/2, 1, 5, 1, 1/2], inf)).asStream);
+		~bufs.put(10,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(10,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(10,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(122,
-			Pdef(
-				\rhythm2,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/8], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([d[\l][1], d[\m][3], d[\h][1]], inf),
-					\rate, Pseq([0.5, 1, 0.25, 5, 0.75, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\cutoff2, Pdefn(\106, Pseq([~idim[106].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\122, Pseq([~idim[122].linlin(0,1,0.1,10000)], inf)),
-					\bus, ~fb.index
-				);
-			)
+			Tdef(\task58, {
+				var delta;
+				loop {
+					delta = ~durs[26].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[10].next,
+							\rate: ~rates[10].next,
+							\amp: ~amps[10].next*~idim[58],
+							\cutoff: ~dimi[58].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(27,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~bufs.put(11,
+			PatternProxy(Pseq([d[\zk][1], d[\zs][0]], inf)).asStream);
+		~rates.put(11,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(11,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(123,
-			Pdef(
-				\kicksnare2,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/2], inf),
-					\stretch, (~t*4),
-					\buf, Pseq([Prand(d[\zk], 1),Prand(d[\zs], 1)], inf),
-					\rate, Pseq([1], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\107, Pseq([~idim[107].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\123, Pseq([~idim[123].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task59, {
+				var delta;
+				loop {
+					delta = ~durs[27].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[11].next,
+							\rate: ~rates[11].next,
+							\amp: ~amps[11].next*~idim[59],
+							\cutoff: ~dimi[59].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(28,
+			PatternProxy(Pseq([1.5], inf)).asStream);
+		~bufs.put(12,
+			PatternProxy(Prand(d[\zm], inf)).asStream);
+		~rates.put(12,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(12,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(124,
-			Pdef(
-				\metals2,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 7/8, 1/6, 1/6, 2/3, 1/16, 1/16, 7/8, 1/6, 1/6, 1/6, 1/6, 1/3], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zm], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\108, Pseq([~idim[108].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\124, Pseq([~idim[124].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task60, {
+				var delta;
+				loop {
+					delta = ~durs[28].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[12].next,
+							\rate: ~rates[12].next,
+							\amp: ~amps[12].next*~idim[60],
+							\cutoff: ~dimi[60].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(29,
+			PatternProxy(Pseq([1.5], inf)).asStream);
+		~bufs.put(13,
+			PatternProxy(Pseq([d[\zk][1]], inf)).asStream);
+		~rates.put(13,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(13,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(125,
-			Pdef(
-				\percs2,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\amp, Pseq([0.095, Pexprand(0.05,0.075,7)], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\109, Pseq([~idim[109].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\125, Pseq([~idim[125].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task61, {
+				var delta;
+				loop {
+					delta = ~durs[29].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[13].next,
+							\rate: ~rates[13].next,
+							\amp: ~amps[13].next*~idim[61],
+							\cutoff: ~dimi[61].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(30,
+			PatternProxy(Pseq([1/3], inf)).asStream);
+		~bufs.put(14,
+			PatternProxy(Prand(d[\zm], inf)).asStream);
+		~rates.put(14,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(14,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(126,
-			Pdef(
-				\altmetal2,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\110, Pseq([~idim[110].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\126, Pseq([~idim[126].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task62, {
+				var delta;
+				loop {
+					delta = ~durs[30].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[14].next,
+							\rate: ~rates[14].next,
+							\amp: ~amps[14].next*~idim[62],
+							\cutoff: ~dimi[62].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
 
 	(
+		~durs.put(31,
+			PatternProxy(Pseq([1/3], inf)).asStream);
+		~bufs.put(15,
+			PatternProxy(Prand(d[\zp], inf)).asStream);
+		~rates.put(15,
+			PatternProxy(Pseq([1], inf)).asStream);
+		~amps.put(15,
+			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(127,
-			Pdef(
-				\altmetal3,
-				Pbind(
-					\instrument, \bufPlay,
-					\dur, Pseq([1/16, 1/16, 1/16, 10/16, 1/16, 1/16, 1/16], inf),
-					\stretch, (~t*4),
-					\buf, Prand(d[\zp], inf),
-					\rate, Pseq([0.5, 1, 0.5, 4, 0.5, 2, 4], inf),
-					\bus, ~fb.index,
-					\cutoff2, Pdefn(\111, Pseq([~idim[111].linlin(0,1,0.1,10000)], inf)),
-					\cutoff, Pdefn(\127, Pseq([~idim[127].linlin(0,1,0.1,10000)], inf)),
-				);
-			).quant_(~t*4)
+			Tdef(\task63, {
+				var delta;
+				loop {
+					delta = ~durs[31].next;
+					Synth(\bufPlay,
+						[
+							\buf: ~bufs[15].next,
+							\rate: ~rates[15].next,
+							\amp: ~amps[15].next*~idim[63],
+							\cutoff: ~dimi[63].linexp(0,1,500,15000),
+							\bus: ~fb.index
+						]
+					);
+					delta.yield;
+				}
+			}).clock_(~timer).quant_(4)
 		)
 	);
-});
-)
+}))
