@@ -2,7 +2,10 @@
 //server
 Server.default = Server.local;
 o = Server.default.options;
-o.memSize_(2.pow(40));
+o.memSize_(2.pow(20));
+o.outDevice_("External Headphones");
+//o.numInputBusChannels_(0);
+//ServerOptions.devices;
 
 //tempo
 ~timer = TempoClock.new(128/60);
@@ -28,7 +31,7 @@ Task({
 		{
 			~gridDevices = ~gridClass.getConnectedDevices;
 			if(
-				~gridDevices.size > 0 //check to see if a physical grid device is present
+				~gridDevices.size > 0 //check to see if a grid device is present
 			)
 			{
 				if(
@@ -185,9 +188,9 @@ s.waitForBoot({
 	.fullScreen
 	.onClose_({~topScope.stop; ~bf.free; ~fb.free})
 	.layout = VLayout(~bodyView,~entry_view);
-	~num_history_lines = 16;
+	~num_history_lines = 14;
 	~line_width = 80;
-	~line_height = 30;
+	~line_height = 45;
 	~tnof = Font('Monaco',~line_height);
 
 	~bf = Buffer.alloc(Server.default,4096,2);
@@ -208,7 +211,7 @@ s.waitForBoot({
 	.start;
 
 	~history_line_views = Array.fill(~num_history_lines,{
-		StaticText(w, (w.view.bounds.width/2-20)@~line_height)
+		StaticText(w, (w.view.bounds.width/2)@~line_height)
 		.stringColor_(Color.new(1,1,1,0.5))
 		.background_(Color.clear).font=~tnof
 	});
@@ -238,7 +241,7 @@ s.waitForBoot({
 	//knob & button interface
 	k = Window("nested", Rect(
 		Window.availableBounds.width/2,
-		60,
+		85,
 		Window.availableBounds.width/2,
 		Window.availableBounds.width/2),
 	border:false)
@@ -688,24 +691,7 @@ s.waitForBoot({
 		);
 	);
 
-//samplers
-	(
-		SynthDef(\bufPlay, {
-			arg buf=[0,1],
-			rate=1,
-			amp=1,
-			cutoff=15000,
-			bus=~fb.index;
-			var sig;
-			sig = RLPF.ar(PlayBuf.ar(1, buf, BufRateScale.ir(buf) * rate, doneAction:2),cutoff,0.25);
-			sig = sig * amp;
-			Out.ar(
-				bus,
-				sig!2
-			)
-		}).add;
-	);
-	s.sync;
+//sampler
 	(
 		Task({
 			SynthDef(\PlayBufPlayer, {
@@ -778,7 +764,10 @@ s.waitForBoot({
 					interpolation:4,
 				);
 				sig=Pan2.ar(
-					(crossfade*snd)+((1-crossfade)*snd2) * env,
+					MoogFF.ar(
+						in: (crossfade*snd)+((1-crossfade)*snd2) * env,
+						freq: \cutoff.kr(12000),
+						gain: \resonance.kr(1)),
 					pan
 				);
 				Out.ar(bus,sig)
@@ -850,7 +839,9 @@ s.waitForBoot({
 	s.sync;
 	12.do({
 		arg i;
-		~player[48+i].set(\pan, Ndef((208+i).asSymbol))
+		~player[48+i].set(\pan, Ndef((208+i).asSymbol));
+		~player[48+i].set(\cutoff, Ndef((128+i).asSymbol));
+		~player[48+i].set(\resonance, Ndef((256+i).asSymbol));
 	});
 //sequences
 	//bank 1
@@ -2132,6 +2123,8 @@ s.waitForBoot({
 	~amps = Array.fill(16, {0});
 
 	(
+		~sound.put(16,
+			OneShot.new);
 		~durs.put(16,
 			PatternProxy(Pseq([1/4],inf)).asStream);
 		~bufs.put(0,
@@ -2142,18 +2135,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(112,
 			Tdef(\task48, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[16].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[0].next,
-							\rate: ~rates[0].next,
-							\amp: ~amps[0].next*~idim[48],
-							\cutoff: ~dimi[48].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[16].next;
+					~sound[16].setParam(voice,\rate,~rates[0].next);
+					~sound[16].setParam(voice,\amp,~amps[0].next*~idim[48]);
+					~sound[16].setParam(voice,\cutoff,~dimi[48].linexp(0,1,500,15000));
+					~sound[16].setParam(voice,\reverb_amount, 0);
+					~sound[16].setParam(voice,\bus,~fb.index);
+					~sound[16].trigger(voice,~bufs[0].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2161,6 +2152,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(17,
+			OneShot.new);
 		~durs.put(17,
 			PatternProxy(Pseq([2],inf)).asStream);
 		~bufs.put(1,
@@ -2171,18 +2164,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(113,
 			Tdef(\task49, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[17].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[1].next,
-							\rate: ~rates[1].next,
-							\amp: ~amps[1].next*~idim[49],
-							\cutoff: ~dimi[49].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[17].next;
+					~sound[17].setParam(voice,\rate,~rates[1].next);
+					~sound[17].setParam(voice,\amp,~amps[1].next*~idim[49]);
+					~sound[17].setParam(voice,\cutoff,~dimi[49].linexp(0,1,500,15000));
+					~sound[17].setParam(voice,\reverb_amount, 0);
+					~sound[17].setParam(voice,\bus,~fb.index);
+					~sound[17].trigger(voice,~bufs[1].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2190,6 +2181,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(18,
+			OneShot.new);
 		~durs.put(18,
 			PatternProxy(Pseq([1/4, 1/4, 6/4, 1/3, 1/3, 4/3, 1/4, 1/4, 6/4, 1/3, 1/3, 1/3, 1/3, 2/3], inf)).asStream);
 		~bufs.put(2,
@@ -2200,18 +2193,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(114,
 			Tdef(\task50, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[18].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[2].next,
-							\rate: ~rates[2].next,
-							\amp: ~amps[2].next*~idim[50],
-							\cutoff: ~dimi[50].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[18].next;
+					~sound[18].setParam(voice,\rate,~rates[2].next);
+					~sound[18].setParam(voice,\amp,~amps[2].next*~idim[50]);
+					~sound[18].setParam(voice,\cutoff,~dimi[50].linexp(0,1,500,15000));
+					~sound[18].setParam(voice,\reverb_amount, 0);
+					~sound[18].setParam(voice,\bus,~fb.index);
+					~sound[18].trigger(voice,~bufs[2].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2219,6 +2210,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(19,
+			OneShot.new);
 		~durs.put(19,
 			PatternProxy(Pseq([1/4], inf)).asStream);
 		~bufs.put(3,
@@ -2229,18 +2222,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(115,
 			Tdef(\task51, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[19].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[3].next,
-							\rate: ~rates[3].next,
-							\amp: ~amps[3].next*~idim[51],
-							\cutoff: ~dimi[51].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[19].next;
+					~sound[19].setParam(voice,\rate,~rates[3].next);
+					~sound[19].setParam(voice,\amp,~amps[3].next*~idim[51]);
+					~sound[19].setParam(voice,\cutoff,~dimi[51].linexp(0,1,500,15000));
+					~sound[19].setParam(voice,\reverb_amount, 0);
+					~sound[19].setParam(voice,\bus,~fb.index);
+					~sound[19].trigger(voice,~bufs[3].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2248,6 +2239,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(20,
+			OneShot.new);
 		~durs.put(20,
 			PatternProxy(Pseq([1/4, 1/4, 1/4, 3/2, 1/4, 1/4, 1/4], inf)).asStream);
 		~bufs.put(4,
@@ -2258,18 +2251,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([0.95, Pexprand(0.5,0.75,0.7)], inf)).asStream);
 		~a.put(116,
 			Tdef(\task52, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[20].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[4].next,
-							\rate: ~rates[4].next,
-							\amp: ~amps[4].next*~idim[52],
-							\cutoff: ~dimi[52].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[20].next;
+					~sound[20].setParam(voice,\rate,~rates[4].next);
+					~sound[20].setParam(voice,\amp,~amps[4].next*~idim[52]);
+					~sound[20].setParam(voice,\cutoff,~dimi[52].linexp(0,1,500,15000));
+					~sound[20].setParam(voice,\reverb_amount, 0);
+					~sound[20].setParam(voice,\bus,~fb.index);
+					~sound[20].trigger(voice,~bufs[4].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2277,6 +2268,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(21,
+			OneShot.new);
 		~durs.put(21,
 			PatternProxy(Pseq([1/4, 1/4, 1/4, 3/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], inf)).asStream);
 		~bufs.put(5,
@@ -2287,18 +2280,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(117,
 			Tdef(\task53, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[21].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[5].next,
-							\rate: ~rates[5].next,
-							\amp: ~amps[5].next*~idim[53],
-							\cutoff: ~dimi[53].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[21].next;
+					~sound[21].setParam(voice,\rate,~rates[5].next);
+					~sound[21].setParam(voice,\amp,~amps[5].next*~idim[53]);
+					~sound[21].setParam(voice,\cutoff,~dimi[53].linexp(0,1,500,15000));
+					~sound[21].setParam(voice,\reverb_amount, 0);
+					~sound[21].setParam(voice,\bus,~fb.index);
+					~sound[21].trigger(voice,~bufs[5].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2306,6 +2297,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(22,
+			OneShot.new);
 		~durs.put(22,
 			PatternProxy(Pseq([1/2], inf)).asStream);
 		~bufs.put(6,
@@ -2316,18 +2309,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(118,
 			Tdef(\task54, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[22].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[6].next,
-							\rate: ~rates[6].next,
-							\amp: ~amps[6].next*~idim[54],
-							\cutoff: ~dimi[54].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[22].next;
+					~sound[22].setParam(voice,\rate,~rates[6].next);
+					~sound[22].setParam(voice,\amp,~amps[6].next*~idim[54]);
+					~sound[22].setParam(voice,\cutoff,~dimi[54].linexp(0,1,500,15000));
+					~sound[22].setParam(voice,\reverb_amount, 0);
+					~sound[22].setParam(voice,\bus,~fb.index);
+					~sound[22].trigger(voice,~bufs[6].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2335,6 +2326,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(23,
+			OneShot.new);
 		~durs.put(23,
 			PatternProxy(Pseq([1, 5, 1, 1/2, 1/2], inf)).asStream);
 		~bufs.put(7,
@@ -2345,18 +2338,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(119,
 			Tdef(\task55, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[23].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[7].next,
-							\rate: ~rates[7].next,
-							\amp: ~amps[7].next*~idim[55],
-							\cutoff: ~dimi[55].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[23].next;
+					~sound[23].setParam(voice,\rate,~rates[7].next);
+					~sound[23].setParam(voice,\amp,~amps[7].next*~idim[55]);
+					~sound[23].setParam(voice,\cutoff,~dimi[55].linexp(0,1,500,15000));
+					~sound[23].setParam(voice,\reverb_amount, 0);
+					~sound[23].setParam(voice,\bus,~fb.index);
+					~sound[23].trigger(voice,~bufs[7].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2364,6 +2355,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(24,
+			OneShot.new);
 		~durs.put(24,
 			PatternProxy(Pseq([1, 1/2, 1/2, 1, 5], inf)).asStream);
 		~bufs.put(8,
@@ -2374,18 +2367,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(120,
 			Tdef(\task56, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[24].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[8].next,
-							\rate: ~rates[8].next,
-							\amp: ~amps[8].next*~idim[56],
-							\cutoff: ~dimi[56].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[24].next;
+					~sound[24].setParam(voice,\rate,~rates[8].next);
+					~sound[24].setParam(voice,\amp,~amps[8].next*~idim[56]);
+					~sound[24].setParam(voice,\cutoff,~dimi[56].linexp(0,1,500,15000));
+					~sound[24].setParam(voice,\reverb_amount, 0);
+					~sound[24].setParam(voice,\bus,~fb.index);
+					~sound[24].trigger(voice,~bufs[8].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2393,6 +2384,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(25,
+			OneShot.new);
 		~durs.put(25,
 			PatternProxy(Pseq([1/2, 1/2, 1, 5, 1], inf)).asStream);
 		~bufs.put(9,
@@ -2403,18 +2396,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(121,
 			Tdef(\task57, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[25].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[9].next,
-							\rate: ~rates[9].next,
-							\amp: ~amps[9].next*~idim[57],
-							\cutoff: ~dimi[57].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[25].next;
+					~sound[25].setParam(voice,\rate,~rates[9].next);
+					~sound[25].setParam(voice,\amp,~amps[9].next*~idim[57]);
+					~sound[25].setParam(voice,\cutoff,~dimi[57].linexp(0,1,500,15000));
+					~sound[25].setParam(voice,\reverb_amount, 0);
+					~sound[25].setParam(voice,\bus,~fb.index);
+					~sound[25].trigger(voice,~bufs[9].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2422,6 +2413,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(26,
+			OneShot.new);
 		~durs.put(26,
 			PatternProxy(Pseq([1/2, 1, 5, 1, 1/2], inf)).asStream);
 		~bufs.put(10,
@@ -2432,18 +2425,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(122,
 			Tdef(\task58, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[26].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[10].next,
-							\rate: ~rates[10].next,
-							\amp: ~amps[10].next*~idim[58],
-							\cutoff: ~dimi[58].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[26].next;
+					~sound[26].setParam(voice,\rate,~rates[10].next);
+					~sound[26].setParam(voice,\amp,~amps[10].next*~idim[58]);
+					~sound[26].setParam(voice,\cutoff,~dimi[58].linexp(0,1,500,15000));
+					~sound[26].setParam(voice,\reverb_amount, 0);
+					~sound[26].setParam(voice,\bus,~fb.index);
+					~sound[26].trigger(voice,~bufs[10].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2451,6 +2442,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(27,
+			OneShot.new);
 		~durs.put(27,
 			PatternProxy(Pseq([1], inf)).asStream);
 		~bufs.put(11,
@@ -2461,18 +2454,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(123,
 			Tdef(\task59, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[27].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[11].next,
-							\rate: ~rates[11].next,
-							\amp: ~amps[11].next*~idim[59],
-							\cutoff: ~dimi[59].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[27].next;
+					~sound[27].setParam(voice,\rate,~rates[11].next);
+					~sound[27].setParam(voice,\amp,~amps[11].next*~idim[59]);
+					~sound[27].setParam(voice,\cutoff,~dimi[59].linexp(0,1,500,15000));
+					~sound[27].setParam(voice,\reverb_amount, 0);
+					~sound[27].setParam(voice,\bus,~fb.index);
+					~sound[27].trigger(voice,~bufs[11].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2480,6 +2471,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(28,
+			OneShot.new);
 		~durs.put(28,
 			PatternProxy(Pseq([1.5], inf)).asStream);
 		~bufs.put(12,
@@ -2490,18 +2483,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(124,
 			Tdef(\task60, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[28].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[12].next,
-							\rate: ~rates[12].next,
-							\amp: ~amps[12].next*~idim[60],
-							\cutoff: ~dimi[60].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[28].next;
+					~sound[28].setParam(voice,\rate,~rates[12].next);
+					~sound[28].setParam(voice,\amp,~amps[12].next*~idim[60]);
+					~sound[28].setParam(voice,\cutoff,~dimi[60].linexp(0,1,500,15000));
+					~sound[28].setParam(voice,\reverb_amount, 0);
+					~sound[28].setParam(voice,\bus,~fb.index);
+					~sound[28].trigger(voice,~bufs[12].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2509,6 +2500,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(29,
+			OneShot.new);
 		~durs.put(29,
 			PatternProxy(Pseq([1.5], inf)).asStream);
 		~bufs.put(13,
@@ -2519,18 +2512,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(125,
 			Tdef(\task61, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[29].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[13].next,
-							\rate: ~rates[13].next,
-							\amp: ~amps[13].next*~idim[61],
-							\cutoff: ~dimi[61].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[29].next;
+					~sound[29].setParam(voice,\rate,~rates[13].next);
+					~sound[29].setParam(voice,\amp,~amps[13].next*~idim[61]);
+					~sound[29].setParam(voice,\cutoff,~dimi[61].linexp(0,1,500,15000));
+					~sound[29].setParam(voice,\reverb_amount, 0);
+					~sound[29].setParam(voice,\bus,~fb.index);
+					~sound[29].trigger(voice,~bufs[13].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2538,6 +2529,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(30,
+			OneShot.new);
 		~durs.put(30,
 			PatternProxy(Pseq([1/3], inf)).asStream);
 		~bufs.put(14,
@@ -2548,18 +2541,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(126,
 			Tdef(\task62, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[30].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[14].next,
-							\rate: ~rates[14].next,
-							\amp: ~amps[14].next*~idim[62],
-							\cutoff: ~dimi[62].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[30].next;
+					~sound[30].setParam(voice,\rate,~rates[14].next);
+					~sound[30].setParam(voice,\amp,~amps[14].next*~idim[62]);
+					~sound[30].setParam(voice,\cutoff,~dimi[62].linexp(0,1,500,15000));
+					~sound[30].setParam(voice,\reverb_amount, 0);
+					~sound[30].setParam(voice,\bus,~fb.index);
+					~sound[30].trigger(voice,~bufs[14].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
@@ -2567,6 +2558,8 @@ s.waitForBoot({
 	);
 
 	(
+		~sound.put(31,
+			OneShot.new);
 		~durs.put(31,
 			PatternProxy(Pseq([1/3], inf)).asStream);
 		~bufs.put(15,
@@ -2577,18 +2570,16 @@ s.waitForBoot({
 			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(127,
 			Tdef(\task63, {
-				var delta;
+				var delta, voice;
 				loop {
 					delta = ~durs[31].next;
-					Synth(\bufPlay,
-						[
-							\buf: ~bufs[15].next,
-							\rate: ~rates[15].next,
-							\amp: ~amps[15].next*~idim[63],
-							\cutoff: ~dimi[63].linexp(0,1,500,15000),
-							\bus: ~fb.index
-						]
-					);
+					voice = ~voiceManager[31].next;
+					~sound[31].setParam(voice,\rate,~rates[15].next);
+					~sound[31].setParam(voice,\amp,~amps[15].next*~idim[63]);
+					~sound[31].setParam(voice,\cutoff,~dimi[63].linexp(0,1,500,15000));
+					~sound[31].setParam(voice,\reverb_amount, 0);
+					~sound[31].setParam(voice,\bus,~fb.index);
+					~sound[31].trigger(voice,~bufs[15].next);
 					delta.yield;
 				}
 			}).clock_(~timer).quant_(4)
