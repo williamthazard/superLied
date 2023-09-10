@@ -2,13 +2,20 @@
 //server
 Server.default = Server.local;
 o = Server.default.options;
-o.memSize_(2.pow(20));
+o.memSize_(2.pow(21));
 o.outDevice_("External Headphones");
+o.inDevice_("Scarlett 4i4 USB");
+s.latency_(0.5);
 //o.numInputBusChannels_(0);
 //ServerOptions.devices;
 
 //tempo
 ~timer = TempoClock.new(128/60);
+
+//buffer allocation
+~delBuf = Buffer.alloc(s, s.sampleRate * (~timer.beatDur*512), 1);
+~micBus = Bus.audio(s, 1);
+~ptrBus = Bus.audio(s, 1);
 
 //words, words, words
 ~b = " ".ascii%32;
@@ -191,6 +198,7 @@ s.waitForBoot({
 	~num_history_lines = 14;
 	~line_width = 80;
 	~line_height = 45;
+	~color_vals = Array.fill(3,{Array.fill(3,{127})});
 	~tnof = Font('Monaco',~line_height);
 
 	~bf = Buffer.alloc(Server.default,4096,2);
@@ -206,9 +214,78 @@ s.waitForBoot({
 	.style_(2)
 	.xZoom_(2)
 	.yZoom_(2)
-	.waveColors_([Color.grey,Color.white])
+	.waveColors_(
+		[
+			Color.new255(
+				~color_vals[0][0],
+				~color_vals[1][0],
+				~color_vals[2][0]
+			),
+			Color.new255(
+				~color_vals[0][1],
+				~color_vals[1][1],
+				~color_vals[2][1]
+			)
+		]
+	)
 	.background_(Color.black)
 	.start;
+
+	Task({
+		var delta = ~timer.beatDur/128;
+		loop {
+			3.do({
+				arg i;
+				3.do({
+					arg j;
+					if(
+						~color_vals[i][j] == 255,
+						{
+							~color_vals[i][j] = ~color_vals[i][j]-[0,1].choose
+						}
+					);
+					if(
+						~color_vals[i][j] == 0,
+						{
+							~color_vals[i][j] = ~color_vals[i][j]+[0,1].choose
+						}
+					);
+					if(
+						(~color_vals[i][j] < 255) && (~color_vals[i][j] > 0),
+						{
+							~color_vals[i][j] = ~color_vals[i][j]+[0,1,-1].wchoose([0.5,0.25,0.25])
+						}
+					);
+				});
+			});
+			~topScope.waveColors_(
+				[
+					Color.new255(
+						~color_vals[0][0],
+						~color_vals[1][0],
+						~color_vals[2][0]
+					),
+					Color.new255(
+						~color_vals[0][1],
+						~color_vals[1][1],
+						~color_vals[2][1]
+					)
+				]
+			);
+			~history_line_views.size.do({
+				arg i;
+				~history_line_views[i].stringColor_(
+					Color.new255(
+						~color_vals[0][2],
+						~color_vals[1][2],
+						~color_vals[2][2],
+						127)
+				)
+			});
+			delta.yield;
+		}
+	},AppClock
+	).play;
 
 	~history_line_views = Array.fill(~num_history_lines,{
 		StaticText(w, (w.view.bounds.width/2)@~line_height)
@@ -789,59 +866,113 @@ s.waitForBoot({
 	~attacks = Array.fill(64, {0});
 	~releases = Array.fill(64, {0});
 //mic
-/*	SynthDef(\mic,
-		{
-			arg out = 0,
-			bus = ~fb.index;
-			var sig;
-			sig = SoundIn.ar(bus);
-			sig = Pan2.ar(sig);
-			Out.ar(bus, sig)
-		}
-	).play(s, [\out, 0]);
-	s.sync;*/
+	SynthDef.new(\mic, {
+		arg in = 0, out = 0, amp = 1;
+		var sig;
+		sig = SoundIn.ar(in) * amp;
+		Out.ar(out, sig);
+	}).add;
+
+//delay
+	SynthDef(\ptr, {
+		arg out = 0, buf = 0, rate = 1;
+		var sig;
+		sig = Phasor.ar(0, BufRateScale.kr(buf)*rate, 0, BufFrames.kr(buf));
+		Out.ar(out, sig);
+	}).add;
+	SynthDef.new(\rec, {
+		arg ptrIn = 0, micIn = 0, buf = 0;
+		var ptr, sig;
+		ptr = In.ar(ptrIn, 1);
+		sig = In.ar(micIn, 1);
+		BufWr.ar(sig, buf, ptr);
+	}).add;
+	SynthDef(\gran, {
+		arg amp = 0.5, buf = 0, out = 0,
+		atk = 1, rel = 1, gate = 1,
+		sync = 1, dens = 40,
+		baseDur = 0.05, durRand = 1,
+		rate = 1, rateRand = 1,
+		pan = 0, panRand = 0,
+		grainEnv = (-1), ptrBus = 0, ptrSampleDelay = 20000,
+		ptrRandSamples = 5000, minPtrDelay = 1000;
+		var sig, env, densCtrl, durCtrl, rateCtrl, panCtrl,
+		ptr, ptrRand, totalDelay, maxGrainDur;
+		env = EnvGen.kr(Env.asr(atk,1,rel), gate, doneAction: 2);
+		densCtrl = Select.ar(sync, [Dust.ar(dens), Impulse.ar(dens)]);
+		durCtrl = baseDur * LFNoise1.ar(100).exprange(1/durRand, durRand);
+		rateCtrl = rate.lag3(0.5) * LFNoise1.ar(100).exprange(1/rateRand, rateRand);
+		panCtrl = pan + LFNoise1.kr(100).bipolar(panRand);
+		ptrRand = LFNoise1.ar(100).bipolar(ptrRandSamples);
+		totalDelay = max(ptrSampleDelay - ptrRand, minPtrDelay);
+		ptr = In.ar(ptrBus, 1);
+		ptr = ptr - totalDelay;
+		ptr = ptr / BufFrames.kr(buf);
+		maxGrainDur = (totalDelay / rateCtrl) / SampleRate.ir;
+		durCtrl = min(durCtrl, maxGrainDur);
+		sig = GrainBuf.ar(
+			2,
+			densCtrl,
+			durCtrl,
+			buf,
+			rateCtrl,
+			ptr,
+			4,
+			panCtrl,
+			grainEnv
+		);
+		sig = MoogFF.ar(
+			sig * env * amp,
+			freq: \cutoff.kr(12000),
+			gain: \resonance.kr(1)
+		);
+		Out.ar(out, sig);
+	}).add;
+	s.sync;
+	~micGrp = Group.new;
+	~ptrGrp = Group.after(~micGrp);
+	~recGrp = Group.after(~ptrGrp);
+	~granGrp = Group.after(~recGroup);
+	~delMic = Synth(\mic, [\in, 0, \out, ~micBus, \amp, 0.3], ~micGrp);
+	Synth(\mic, [\in, 0, \out, ~fb.index, \amp, 0.3], ~micGrp);
+	Synth(\mic, [\in, 0, \out, ~fb.index+1, \amp, 0.3], ~micGrp);
+	Synth(\ptr, [\buf, ~delBuf, \out, ~ptrBus], ~ptrGrp);
+	Synth(\rec, [\ptrIn, ~ptrBus, \micIn, ~micBus, \buf, ~delBuf], ~recGrp);
+
 //modulators
-	384.do({ //24 LFOs per synth voice
+	192.do({
 		arg i;
 		if(
-			i < 128, //LFOs 0-127 are calibrated for panning
+			i < 64, //calibrated for panning
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
+					LFTri.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
 				})
 			}
 		);
 		if(
-			(i > 127) && (i < 208), //LFOs 128-207 are calibrated for filter cutoff
+			(i > 63) && (i < 128), //calibrated for filter cutoff
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2.0,512.0)).range(500,15000)
+					LFTri.kr(~timer.beatDur/rrand(2.0,512.0)).range(500,15000)
 				})
 			}
 		);
 		if(
-			(i > 207) && (i < 256), //LFOs 208-255 are calibrated for panning
+			(i > 127) && (i < 192), //calibrated for filter resonance
 			{
 				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
+					LFTri.kr(~timer.beatDur/rrand(2.0,512.0)).range(0,3)
 				})
 			}
 		);
-		if(
-			(i > 255) && (i < 336), //LFOs 256-383 are calibrated for filter resonance
-			{
-				Ndef(i.asSymbol, {
-					SinOsc.kr(~timer.beatDur/rrand(2.0,512.0)).range(0,3)
-				})
-			}
-		)
 	});
 	s.sync;
-	12.do({
+	16.do({
 		arg i;
-		~player[48+i].set(\pan, Ndef((208+i).asSymbol));
-		~player[48+i].set(\cutoff, Ndef((128+i).asSymbol));
-		~player[48+i].set(\resonance, Ndef((256+i).asSymbol));
+		~player[48+i].set(\pan, Ndef(i.asSymbol));
+		~player[48+i].set(\cutoff, Ndef((64+i).asSymbol));
+		~player[48+i].set(\resonance, Ndef((128+i).asSymbol));
 	});
 //sequences
 	//bank 1
@@ -849,14 +980,14 @@ s.waitForBoot({
 		~sound.put(0,
 			TriSin.new);
 		~sound[0].setParam('all',\bus,~fb.index);
-		~sound[0].setParam('all',\reverb_amount,0.3); //synth 0's reverb amount is set to a constant 0.3
-		~sound[0].setParam('all',\room_size,0.4); //synth 0's room size is set to a constant 0.4
-		~sound[0].setParam('all',\damp,0.5); // synth 0's dampening is set to a constant 0.5
+		~sound[0].setParam('all',\reverb_amount,0.3);
+		~sound[0].setParam('all',\room_size,0.4);
+		~sound[0].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[0].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol)); //LFOs 0-7 modulate synth 0's pan position
-			~sound[0].setParam((i+1).asSymbol,\cutoff,Ndef((i+128).asSymbol)); //LFOs 128-135 modulate synth 0's filter cutoff
-			~sound[0].setParam((i+1).asSymbol,\resonance,Ndef((i+256).asSymbol)); //LFOs 256-263 modulate synth 0's filter resonance
+			~sound[0].setParam((i+1).asSymbol,\pan,Ndef((16+i).asSymbol));
+			~sound[0].setParam((i+1).asSymbol,\cutoff,Ndef((80+i).asSymbol));
+			~sound[0].setParam((i+1).asSymbol,\resonance,Ndef((144+i).asSymbol));
 		});
 		~note.put(32,
 			PatternProxy(Pseq(~b, inf)));
@@ -897,9 +1028,9 @@ s.waitForBoot({
 		~sound[1].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[1].setParam((i+1).asSymbol,\pan,Ndef(i+8.asSymbol)); //LFOs 8-15 modulate synth 1's pan position
-			~sound[1].setParam((i+1).asSymbol,\cutoff,Ndef((i+136).asSymbol)); //LFOs 136-143 modulate synth 1's filter cutoff
-			~sound[1].setParam((i+1).asSymbol,\resonance,Ndef((i+264).asSymbol)); //LFOs 264-271 modulate synth 1's filter resonance
+			~sound[1].setParam((i+1).asSymbol,\pan,Ndef((24+i).asSymbol));
+			~sound[1].setParam((i+1).asSymbol,\cutoff,Ndef((88+i).asSymbol));
+			~sound[1].setParam((i+1).asSymbol,\resonance,Ndef((152+i).asSymbol));
 		});
 		~note.put(33,
 			PatternProxy(Pseq(~b.rotate(1), inf)));
@@ -922,7 +1053,7 @@ s.waitForBoot({
 					~sound[1].setParam(voice,\index,~dimi[1].linlin(0,1,-24,24));
 					~sound[1].setParam(voice,\modnum,~modnums[1].next);
 					~sound[1].setParam(voice,\modeno,~modenos[1].next);
-					~sound[1].setParam(voice,\freq_slew,3);
+					~sound[1].setParam(voice,\freq_slew,[0,0.1].choose);
 					~sound[1].setParam(voice,\cutoff_env,[0,1].choose);
 					~sound[1].trigger(voice,(~noted[33].next+[24,36].choose).midicps);
 					delta.yield;
@@ -940,9 +1071,9 @@ s.waitForBoot({
 		~sound[2].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[2].setParam((i+1).asSymbol,\pan,Ndef(i+16.asSymbol)); //LFOs 16-23 modulate synth 2's pan position
-			~sound[2].setParam((i+1).asSymbol,\cutoff,Ndef((i+144).asSymbol)); //LFOs 144-151 modulate synth 2's filter cutoff
-			~sound[2].setParam((i+1).asSymbol,\resonance,Ndef((i+272).asSymbol)); //LFOs 272-279 modulate synth 2's filter resonance
+			~sound[2].setParam((i+1).asSymbol,\pan,Ndef((32+i).asSymbol));
+			~sound[2].setParam((i+1).asSymbol,\cutoff,Ndef((96+i).asSymbol));
+			~sound[2].setParam((i+1).asSymbol,\resonance,Ndef((160+i).asSymbol));
 		});
 		~note.put(34,
 			PatternProxy(Pseq(~b.rotate(2), inf)));
@@ -983,9 +1114,9 @@ s.waitForBoot({
 		~sound[3].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[3].setParam((i+1).asSymbol,\pan,Ndef(i+24.asSymbol)); //LFOs 24-31 modulate synth 3's pan position
-			~sound[3].setParam((i+1).asSymbol,\cutoff,Ndef((i+152).asSymbol)); //LFOs 152-159 modulate synth 3's filter cutoff
-			~sound[3].setParam((i+1).asSymbol,\resonance,Ndef((i+280).asSymbol)); //LFOs 280-287 modulate synth 3's filter resonance
+			~sound[3].setParam((i+1).asSymbol,\pan,Ndef((40+i).asSymbol));
+			~sound[3].setParam((i+1).asSymbol,\cutoff,Ndef((104+i).asSymbol));
+			~sound[3].setParam((i+1).asSymbol,\resonance,Ndef((168+i).asSymbol));
 		});
 		~note.put(35,
 			PatternProxy(Pseq(~b.rotate(3), inf)));
@@ -1026,9 +1157,9 @@ s.waitForBoot({
 		~sound[4].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[4].setParam((i+1).asSymbol,\pan,Ndef(i+32.asSymbol)); //LFOs 32-39 modulate synth 4's pan position
-			~sound[4].setParam((i+1).asSymbol,\cutoff,Ndef((i+160).asSymbol)); //LFOs 160-167 modulate synth 4's filter cutoff
-			~sound[4].setParam((i+1).asSymbol,\resonance,Ndef((i+288).asSymbol)); //LFOs 288-295 modulate synth 4's filter resonance
+			~sound[4].setParam((i+1).asSymbol,\pan,Ndef((48+i).asSymbol));
+			~sound[4].setParam((i+1).asSymbol,\cutoff,Ndef((112+i).asSymbol));
+			~sound[4].setParam((i+1).asSymbol,\resonance,Ndef((176+i).asSymbol));
 		});
 		~note.put(36,
 			PatternProxy(Pseq(~b.rotate(4), inf)));
@@ -1073,9 +1204,9 @@ s.waitForBoot({
 		~sound[5].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[5].setParam((i+1).asSymbol,\pan,Ndef(i+40.asSymbol)); //LFOs 40-47 modulate synth 5's pan position
-			~sound[5].setParam((i+1).asSymbol,\cutoff,Ndef((i+168).asSymbol)); //LFOs 168-175 modulate synth 5's filter cutoff
-			~sound[5].setParam((i+1).asSymbol,\resonance,Ndef((i+296).asSymbol)); //LFOs 296-303 modulate synth 5's filter resonance
+			~sound[5].setParam((i+1).asSymbol,\pan,Ndef((56+i).asSymbol));
+			~sound[5].setParam((i+1).asSymbol,\cutoff,Ndef((120+i).asSymbol));
+			~sound[5].setParam((i+1).asSymbol,\resonance,Ndef((184+i).asSymbol));
 		});
 		~note.put(37,
 			PatternProxy(Pseq(~b.rotate(5), inf)));
@@ -1120,7 +1251,7 @@ s.waitForBoot({
 		~sound[6].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[6].setParam((i+1).asSymbol,\pan,Ndef(i+48.asSymbol)); //LFOs 48-55 modulate synth 6's pan position
+			~sound[6].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol));
 		});
 		~note.put(38,
 			PatternProxy(Pseq(~b.rotate(6), inf)));
@@ -1152,7 +1283,7 @@ s.waitForBoot({
 		~sound[7].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[7].setParam((i+1).asSymbol,\pan,Ndef(i+56.asSymbol)); //LFOs 56-63 modulate synth 7's pan position
+			~sound[7].setParam((i+1).asSymbol,\pan,Ndef((8+i).asSymbol));
 		});
 		~note.put(39,
 			PatternProxy(Pseq(~b.rotate(7), inf)));
@@ -1184,9 +1315,9 @@ s.waitForBoot({
 		~sound[8].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[8].setParam((i+1).asSymbol,\pan,Ndef(i+64.asSymbol)); //LFOs 64-71 modulate synth 4's pan position
-			~sound[8].setParam((i+1).asSymbol,\cutoff,Ndef((i+176).asSymbol)); //LFOs 176-183 modulate synth 4's filter cutoff
-			~sound[8].setParam((i+1).asSymbol,\resonance,Ndef((i+304).asSymbol)); //LFOs 304-311 modulate synth 4's filter resonance
+			~sound[8].setParam((i+1).asSymbol,\pan,Ndef((16+i).asSymbol));
+			~sound[8].setParam((i+1).asSymbol,\cutoff,Ndef((64+i).asSymbol));
+			~sound[8].setParam((i+1).asSymbol,\resonance,Ndef((128+i).asSymbol));
 		});
 		~note.put(40,
 			PatternProxy(Pseq(~b.rotate(8), inf)));
@@ -1233,9 +1364,9 @@ s.waitForBoot({
 		~sound[9].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[9].setParam((i+1).asSymbol,\pan,Ndef(i+72.asSymbol)); //LFOs 72-79 modulate synth 4's pan position
-			~sound[9].setParam((i+1).asSymbol,\cutoff,Ndef((i+184).asSymbol)); //LFOs 184-191 modulate synth 4's filter cutoff
-			~sound[9].setParam((i+1).asSymbol,\resonance,Ndef((i+312).asSymbol)); //LFOs 312-319 modulate synth 4's filter resonance
+			~sound[9].setParam((i+1).asSymbol,\pan,Ndef((24+i).asSymbol));
+			~sound[9].setParam((i+1).asSymbol,\cutoff,Ndef((72+i).asSymbol));
+			~sound[9].setParam((i+1).asSymbol,\resonance,Ndef((136+i).asSymbol));
 		});
 		~note.put(41,
 			PatternProxy(Pseq(~b.rotate(9), inf)));
@@ -1282,9 +1413,9 @@ s.waitForBoot({
 		~sound[10].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[10].setParam((i+1).asSymbol,\pan,Ndef(i+80.asSymbol)); //LFOs 80-87 modulate synth 4's pan position
-			~sound[10].setParam((i+1).asSymbol,\cutoff,Ndef((i+192).asSymbol)); //LFOs 192-199 modulate synth 4's filter cutoff
-			~sound[10].setParam((i+1).asSymbol,\resonance,Ndef((i+320).asSymbol)); //LFOs 320-327 modulate synth 4's filter resonance
+			~sound[10].setParam((i+1).asSymbol,\pan,Ndef((32+i).asSymbol));
+			~sound[10].setParam((i+1).asSymbol,\cutoff,Ndef((80+i).asSymbol));
+			~sound[10].setParam((i+1).asSymbol,\resonance,Ndef((144+i).asSymbol));
 		});
 		~note.put(42,
 			PatternProxy(Pseq(~b.rotate(10), inf)));
@@ -1331,9 +1462,9 @@ s.waitForBoot({
 		~sound[11].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[11].setParam((i+1).asSymbol,\pan,Ndef(i+88.asSymbol)); //LFOs 88-95 modulate synth 4's pan position
-			~sound[11].setParam((i+1).asSymbol,\cutoff,Ndef((i+200).asSymbol)); //LFOs 200-207 modulate synth 4's filter cutoff
-			~sound[11].setParam((i+1).asSymbol,\resonance,Ndef((i+328).asSymbol)); //LFOs 328-335 modulate synth 4's filter resonance
+			~sound[11].setParam((i+1).asSymbol,\pan,Ndef((40+i).asSymbol));
+			~sound[11].setParam((i+1).asSymbol,\cutoff,Ndef((88+i).asSymbol));
+			~sound[11].setParam((i+1).asSymbol,\resonance,Ndef((152+i).asSymbol));
 		});
 		~note.put(43,
 			PatternProxy(Pseq(~b.rotate(11), inf)));
@@ -1380,7 +1511,7 @@ s.waitForBoot({
 		~sound[12].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[12].setParam((i+1).asSymbol,\pan,Ndef(i+96.asSymbol)); //LFOs 96-103 modulate synth 7's pan position
+			~sound[12].setParam((i+1).asSymbol,\pan,Ndef((48+i).asSymbol));
 		});
 		~note.put(44,
 			PatternProxy(Pseq(~b.rotate(12), inf)));
@@ -1414,7 +1545,7 @@ s.waitForBoot({
 		~sound[13].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[13].setParam((i+1).asSymbol,\pan,Ndef(i+104.asSymbol)); //LFOs 104-111 modulate synth 7's pan position
+			~sound[13].setParam((i+1).asSymbol,\pan,Ndef((56+i).asSymbol));
 		});
 		~note.put(45,
 			PatternProxy(Pseq(~b.rotate(13), inf)));
@@ -1448,7 +1579,7 @@ s.waitForBoot({
 		~sound[14].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[14].setParam((i+1).asSymbol,\pan,Ndef(i+112.asSymbol)); //LFOs 112-119 modulate synth 7's pan position
+			~sound[14].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol));
 		});
 		~note.put(46,
 			PatternProxy(Pseq(~b.rotate(14), inf)));
@@ -1482,7 +1613,7 @@ s.waitForBoot({
 		~sound[15].setParam('all',\damp,0.5);
 		8.do({
 			arg i;
-			~sound[15].setParam((i+1).asSymbol,\pan,Ndef(i+120.asSymbol)); //LFOs 120-127 modulate synth 7's pan position
+			~sound[15].setParam((i+1).asSymbol,\pan,Ndef((8+i).asSymbol));
 		});
 		~note.put(47,
 			PatternProxy(Pseq(~b.rotate(15), inf)));
@@ -2119,7 +2250,7 @@ s.waitForBoot({
 
 	//bank 4
 	~bufs = Array.fill(16,{0});
-	~rates = Array.fill(16,{0});
+	~rates = Array.fill(18,{0});
 	~amps = Array.fill(16, {0});
 
 	(
@@ -2538,7 +2669,7 @@ s.waitForBoot({
 		~rates.put(14,
 			PatternProxy(Pseq([1], inf)).asStream);
 		~amps.put(14,
-			PatternProxy(Pseq([1], inf)).asStream);
+			PatternProxy(Pseq([0], inf)).asStream);
 		~a.put(126,
 			Tdef(\task62, {
 				var delta, voice;
@@ -2567,7 +2698,7 @@ s.waitForBoot({
 		~rates.put(15,
 			PatternProxy(Pseq([1], inf)).asStream);
 		~amps.put(15,
-			PatternProxy(Pseq([1], inf)).asStream);
+			PatternProxy(Pseq([0], inf)).asStream);
 		~a.put(127,
 			Tdef(\task63, {
 				var delta, voice;
@@ -2585,4 +2716,69 @@ s.waitForBoot({
 			}).clock_(~timer).quant_(4)
 		)
 	);
+
+	~rates.put(16,[1/4,1/2,1,3/2,2].scramble);
+	~durs.put(7,5.collect({arg i; ~timer.beatDur*(i+1)}).scramble);
+	~delays = 5.collect({arg i; s.sampleRate*(~timer.beatDur*(i+1))*16}).scramble;
+	~g = 5.collect({
+		arg n;
+		Synth(\gran, [
+			\amp, 0,
+			\buf, ~delBuf,
+			\out, ~fb.index,
+			\atk, 1,
+			\rel, 1,
+			\gate, 1,
+			\sync, 1,
+			\dens, 1/(~durs[7][n]*~rates[16][n]),
+			\baseDur, ~durs[7][n],
+			\durRand, 1,
+			\rate, ~rates[16][n],
+			\rateRand, 1,
+			\pan, Ndef(n.asSymbol),
+			\panRand, 0,
+			\grainEnv, -1,
+			\ptrBus, ~ptrBus,
+			\ptrSampleDelay, ~delays[n],
+			\ptrRandSamples, s.sampleRate*(~timer.beatDur*((n%8)+1))*2,
+			\minPtrDelay, ~delays[n],
+			\cutoff, Ndef((n+64).asSymbol),
+			\resonance, Ndef((n+128).asSymbol)
+		], ~granGrp;
+		)
+	});
+	Tdef(\task64, {
+		var delta;
+		loop {
+			delta = 1/16;
+			if(
+				~step[126] == 0,
+				{
+					~delMic.set(\amp, 0)
+				},
+				{
+					~delMic.set(\amp, 1)
+				}
+			);
+			delta.yield;
+		}
+	}).clock_(~timer).quant_(4).play;
+	Tdef(\task65, {
+		var delta;
+		loop {
+			delta = 1/16;
+			if(
+				~step[127] == 0,
+				{5.do({
+					arg i;
+					~g[i].set(\amp, 0)
+				})},
+				{5.do({
+					arg i;
+					~g[i].set(\amp, 1)
+				})}
+			);
+			delta.yield;
+		}
+	}).clock_(~timer).quant_(4).play;
 }))
