@@ -3,7 +3,7 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(21));
-o.outDevice_("External Headphones");
+o.outDevice_("Scarlett 4i4 USB");
 o.inDevice_("Scarlett 4i4 USB");
 s.latency_(0.5);
 //o.numInputBusChannels_(0);
@@ -66,12 +66,74 @@ Task({
 									{
 										~step[pos] = 0;
 										~a[pos].stop;
-										AppClock.sched(0,{~comp[1].children[pos].value_(0)})
+										AppClock.sched(0,{~comp[1].children[pos].value_(0)});
+										if(
+											pos == 125,
+											{
+												~delMic.set(\amp,0);
+												"stopped recording to Carter's Delay".postln
+											}
+										);
+										if(
+											pos == 126,
+											{
+												15.do(
+													{
+														arg i;
+														~g[i].set(\amp,0);
+													}
+												);
+												"Carter's Delay deactivated".postln
+											}
+										);
+										if(
+											pos == 127,
+											{
+												2.do(
+													{
+														arg i;
+														~inMic[i].set(\amp,0);
+													}
+												);
+												"mic off".postln
+											}
+										)
 									},
 									{
 										~step[pos] = 1;
 										~a[pos].play(~timer, quant: 4);
-										AppClock.sched(0,{~comp[1].children[pos].value_(1)})
+										AppClock.sched(0,{~comp[1].children[pos].value_(1)});
+										if(
+											pos == 125,
+											{
+												~delMic.set(\amp,1);
+												"recording to Carter's Delay".postln
+											}
+										);
+										if(
+											pos == 126,
+											{
+												15.do(
+													{
+														arg i;
+														~g[i].set(\amp,1);
+													}
+												);
+												"Carter's Delay activated".postln
+											}
+										);
+										if(
+											pos == 127,
+											{
+												2.do(
+													{
+														arg i;
+														~inMic[i].set(\amp,1);
+													}
+												);
+												"mic on".postln
+											}
+										)
 									}
 								);
 								~draw.value(x,y);
@@ -212,8 +274,8 @@ s.waitForBoot({
 	.bufnum_(~bf.bufnum)
 	.server_(Server.default)
 	.style_(2)
-	.xZoom_(2)
-	.yZoom_(2)
+	.xZoom_(4)
+	.yZoom_(4)
 	.waveColors_(
 		[
 			Color.new255(
@@ -232,7 +294,7 @@ s.waitForBoot({
 	.start;
 
 	Task({
-		var delta = ~timer.beatDur/128;
+		var delta = ~timer.beatDur/2;
 		loop {
 			3.do({
 				arg i;
@@ -675,7 +737,7 @@ s.waitForBoot({
 		)
 	};
 
-	16.do{
+	13.do{
 		arg i;
 		~comp[1].children[i+112].mouseDownAction_(
 			{
@@ -700,6 +762,98 @@ s.waitForBoot({
 			}
 		)
 	};
+
+
+	~comp[1].children[125].mouseDownAction_(
+		{
+			arg view;
+			if(
+				view.value == 3,
+				{
+					view.value = 1
+				}
+			);
+			if(
+				view.value == 0,
+				{
+					~delMic.set(\amp, 1);
+					~step[125] = 1;
+					"recording to Carter's Delay".postln;
+				},
+				{
+					~delMic.set(\amp, 0);
+					~step[125] = 0;
+					"stopped recording to Carter's Delay".postln;
+				}
+			)
+		}
+	);
+
+	~comp[1].children[126].mouseDownAction_(
+		{
+			arg view;
+			if(
+				view.value == 3,
+				{
+					view.value = 1
+				}
+			);
+			if(
+				view.value == 0,
+				{
+					15.do({
+						arg i;
+						~g[i].set(\amp, 1)
+					});
+					~step[126] = 1;
+					"Carter's Delay activated".postln;
+				},
+				{
+					15.do({
+						arg i;
+						~g[i].set(\amp, 0)
+					});
+					~step[126] = 0;
+					"Carter's Delay deactivated".postln;
+				}
+			)
+		}
+	);
+
+	~comp[1].children[127].mouseDownAction_(
+		{
+			arg view;
+			if(
+				view.value == 3,
+				{
+					view.value = 1
+				}
+			);
+			if(
+				view.value == 0,
+				{
+					2.do(
+						{
+							arg i;
+							~inMic[i].set(\amp,1);
+						}
+					);
+					"mic on".postln;
+					~step[127] = 1;
+				},
+				{
+					2.do(
+						{
+							arg i;
+							~inMic[i].set(\amp,0);
+						}
+					);
+					"mic off".postln;
+					~step[127] = 0;
+				}
+			)
+		}
+	);
 
 //samples go here! Change PathName to point to your own folder(s) of samples
 	//TIP: you can drag and drop a folder right into this window, and its pathname will show up where you drop it
@@ -842,108 +996,156 @@ s.waitForBoot({
 				);
 				sig=Pan2.ar(
 					MoogFF.ar(
-						in: (crossfade*snd)+((1-crossfade)*snd2) * env,
-						freq: \cutoff.kr(12000),
-						gain: \resonance.kr(1)),
+						in:(crossfade*snd)+((1-crossfade)*snd2)*env,
+						freq:\cutoff.kr(12000),
+						gain:\resonance.kr(1)),
 					pan
 				);
 				Out.ar(bus,sig)
-			}).play(s, [\out, 0]);
+			}).play(s,[\out,0]);
 			s.sync;
 			16.do({arg i;
-				~player.put(48+i, Synth(\PlayBufPlayer, [\bufnum, d[\n][i]]));
+				~player.put(48+i,Synth(\PlayBufPlayer,[\bufnum,d[\n][i]]));
 			});
 		}).play;
 	);
 	s.sync;
 //synths
-	~sound = Array.fill(64, {0});
-	~voices = [\1, \2, \3, \4, \5, \6, \7, \8];
-	~voiceManager = Array.fill(64, {PatternProxy(Pseq(~voices, inf)).asStream});
-	~durs = Array.fill(64, {0});
-	~modnums = Array.fill(64, {0});
-	~modenos = Array.fill(64, {0});
-	~attacks = Array.fill(64, {0});
-	~releases = Array.fill(64, {0});
+	~sound=Array.fill(64,{0});
+	~voices=[\1,\2,\3,\4,\5,\6,\7,\8];
+	~voiceManager=Array.fill(64,{PatternProxy(Pseq(~voices, inf)).asStream});
+	~durs=Array.fill(64,{0});
+	~modnums=Array.fill(64,{0});
+	~modenos=Array.fill(64,{0});
+	~attacks=Array.fill(64,{0});
+	~releases=Array.fill(64,{0});
 //mic
 	SynthDef.new(\mic, {
-		arg in = 0, out = 0, amp = 1;
+		arg in=0,
+		out=0,
+		amp=1;
 		var sig;
-		sig = SoundIn.ar(in) * amp;
-		Out.ar(out, sig);
+		sig=SoundIn.ar(in)*amp;
+		Out.ar(out,sig);
 	}).add;
 
 //delay
 	SynthDef(\ptr, {
-		arg out = 0, buf = 0, rate = 1;
+		arg out=0,
+		buf=0,
+		rate=1;
 		var sig;
-		sig = Phasor.ar(0, BufRateScale.kr(buf)*rate, 0, BufFrames.kr(buf));
+		sig=Phasor.ar(0,BufRateScale.kr(buf)*rate,0,BufFrames.kr(buf));
 		Out.ar(out, sig);
 	}).add;
 	SynthDef.new(\rec, {
-		arg ptrIn = 0, micIn = 0, buf = 0;
-		var ptr, sig;
-		ptr = In.ar(ptrIn, 1);
-		sig = In.ar(micIn, 1);
-		BufWr.ar(sig, buf, ptr);
+		arg ptrIn=0,
+		micIn=0,
+		buf=0;
+		var ptr,
+		sig;
+		ptr=In.ar(ptrIn,1);
+		sig=In.ar(micIn,1);
+		BufWr.ar(sig,buf,ptr);
 	}).add;
 	SynthDef(\gran, {
-		arg amp = 0.5, buf = 0, out = 0,
-		atk = 1, rel = 1, gate = 1,
-		sync = 1, dens = 40,
-		baseDur = 0.05, durRand = 1,
-		rate = 1, rateRand = 1,
-		pan = 0, panRand = 0,
-		grainEnv = (-1), ptrBus = 0, ptrSampleDelay = 20000,
-		ptrRandSamples = 5000, minPtrDelay = 1000;
-		var sig, env, densCtrl, durCtrl, rateCtrl, panCtrl,
-		ptr, ptrRand, totalDelay, maxGrainDur;
-		env = EnvGen.kr(Env.asr(atk,1,rel), gate, doneAction: 2);
-		densCtrl = Select.ar(sync, [Dust.ar(dens), Impulse.ar(dens)]);
-		durCtrl = baseDur * LFNoise1.ar(100).exprange(1/durRand, durRand);
-		rateCtrl = rate.lag3(0.5) * LFNoise1.ar(100).exprange(1/rateRand, rateRand);
-		panCtrl = pan + LFNoise1.kr(100).bipolar(panRand);
-		ptrRand = LFNoise1.ar(100).bipolar(ptrRandSamples);
-		totalDelay = max(ptrSampleDelay - ptrRand, minPtrDelay);
-		ptr = In.ar(ptrBus, 1);
-		ptr = ptr - totalDelay;
-		ptr = ptr / BufFrames.kr(buf);
-		maxGrainDur = (totalDelay / rateCtrl) / SampleRate.ir;
-		durCtrl = min(durCtrl, maxGrainDur);
-		sig = GrainBuf.ar(
+		arg amp=0.5,
+		buf=0,
+		out=0,
+		atk=1,
+		rel=1,
+		gate=1,
+		sync=1,
+		dens=40,
+		baseDur=0.05,
+		durRand=1,
+		rate=1,
+		rateRand=1,
+		pan=0,
+		panRand=0,
+		grainEnv=(-1),
+		ptrBus=0,
+		ptrSampleDelay=20000,
+		ptrRandSamples=5000,
+		minPtrDelay=1000;
+		var sig,
+		env,
+		densCtrl,
+		durCtrl,
+		rateCtrl,
+		panCtrl,
+		ptr,
+		ptrRand,
+		totalDelay,
+		maxGrainDur;
+		env=EnvGen.kr(
+			Env.asr(
+				atk,
+				1,
+				rel
+			),
+			gate,
+			doneAction: 2
+		);
+		densCtrl=Select.ar(
+			sync,
+			[
+				Dust.ar(
+					dens
+				),
+				Impulse.ar(
+					dens
+				)
+			]
+		);
+		durCtrl=baseDur*LFNoise1.ar(100).exprange(1/durRand,durRand);
+		rateCtrl=rate.lag3(0.5)*LFNoise1.ar(100).exprange(1/rateRand,rateRand);
+		panCtrl=pan+LFNoise1.kr(100).bipolar(panRand);
+		ptrRand=LFNoise1.ar(100).bipolar(ptrRandSamples);
+		totalDelay=max(ptrSampleDelay-ptrRand,minPtrDelay);
+		ptr=In.ar(ptrBus,1);
+		ptr=ptr-totalDelay;
+		ptr=ptr/BufFrames.kr(buf);
+		maxGrainDur=(totalDelay/rateCtrl)/SampleRate.ir;
+		durCtrl=min(durCtrl,maxGrainDur);
+		sig=GrainBuf.ar(
 			2,
 			densCtrl,
 			durCtrl,
 			buf,
 			rateCtrl,
 			ptr,
-			4,
+			2,
 			panCtrl,
-			grainEnv
+			grainEnv,
+			maxGrains:8,
 		);
 		sig = MoogFF.ar(
-			sig * env * amp,
-			freq: \cutoff.kr(12000),
-			gain: \resonance.kr(1)
+			sig*env*amp,
+			freq:\cutoff.kr(12000),
+			gain:\resonance.kr(1)
 		);
-		Out.ar(out, sig);
+		Out.ar(out,sig);
 	}).add;
 	s.sync;
-	~micGrp = Group.new;
-	~ptrGrp = Group.after(~micGrp);
-	~recGrp = Group.after(~ptrGrp);
-	~granGrp = Group.after(~recGroup);
-	~delMic = Synth(\mic, [\in, 0, \out, ~micBus, \amp, 0.3], ~micGrp);
-	Synth(\mic, [\in, 0, \out, ~fb.index, \amp, 0.3], ~micGrp);
-	Synth(\mic, [\in, 0, \out, ~fb.index+1, \amp, 0.3], ~micGrp);
-	Synth(\ptr, [\buf, ~delBuf, \out, ~ptrBus], ~ptrGrp);
-	Synth(\rec, [\ptrIn, ~ptrBus, \micIn, ~micBus, \buf, ~delBuf], ~recGrp);
-
+	~micGrp=Group.new;
+	~ptrGrp=Group.after(~micGrp);
+	~recGrp=Group.after(~ptrGrp);
+	~granGrp=Group.after(~recGroup);
+	~delMic=Synth(\mic,[\in,0,\out,~micBus,\amp,0.5],~micGrp);
+	~inMic=2.collect(
+		{
+			arg i;
+			Synth(\mic,[\in,0,\out,~fb.index+i,\amp,0],~micGrp);
+		}
+	);
+	Synth(\ptr,[\buf,~delBuf,\out,~ptrBus],~ptrGrp);
+	Synth(\rec,[\ptrIn,~ptrBus,\micIn,~micBus,\buf,~delBuf],~recGrp);
 //modulators
-	192.do({
+	48.do({
 		arg i;
 		if(
-			i < 64, //calibrated for panning
+			i < 16, //calibrated for panning
 			{
 				Ndef(i.asSymbol, {
 					LFTri.kr(~timer.beatDur/rrand(2.0,16.0)).range(-1,1)
@@ -951,7 +1153,7 @@ s.waitForBoot({
 			}
 		);
 		if(
-			(i > 63) && (i < 128), //calibrated for filter cutoff
+			(i > 15) && (i < 32), //calibrated for filter cutoff
 			{
 				Ndef(i.asSymbol, {
 					LFTri.kr(~timer.beatDur/rrand(2.0,512.0)).range(500,15000)
@@ -959,7 +1161,7 @@ s.waitForBoot({
 			}
 		);
 		if(
-			(i > 127) && (i < 192), //calibrated for filter resonance
+			(i > 31) && (i < 48), //calibrated for filter resonance
 			{
 				Ndef(i.asSymbol, {
 					LFTri.kr(~timer.beatDur/rrand(2.0,512.0)).range(0,3)
@@ -970,9 +1172,9 @@ s.waitForBoot({
 	s.sync;
 	16.do({
 		arg i;
-		~player[48+i].set(\pan, Ndef(i.asSymbol));
-		~player[48+i].set(\cutoff, Ndef((64+i).asSymbol));
-		~player[48+i].set(\resonance, Ndef((128+i).asSymbol));
+		~player[48+i].set(\pan,Ndef(i.asSymbol));
+		~player[48+i].set(\cutoff,Ndef((16+i).asSymbol));
+		~player[48+i].set(\resonance,Ndef((32+i).asSymbol));
 	});
 //sequences
 	//bank 1
@@ -980,15 +1182,6 @@ s.waitForBoot({
 		~sound.put(0,
 			TriSin.new);
 		~sound[0].setParam('all',\bus,~fb.index);
-		~sound[0].setParam('all',\reverb_amount,0.3);
-		~sound[0].setParam('all',\room_size,0.4);
-		~sound[0].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[0].setParam((i+1).asSymbol,\pan,Ndef((16+i).asSymbol));
-			~sound[0].setParam((i+1).asSymbol,\cutoff,Ndef((80+i).asSymbol));
-			~sound[0].setParam((i+1).asSymbol,\resonance,Ndef((144+i).asSymbol));
-		});
 		~note.put(32,
 			PatternProxy(Pseq(~b, inf)));
 		~noted.put(32,
@@ -1023,15 +1216,6 @@ s.waitForBoot({
 		~sound.put(1,
 			SinSin.new);
 		~sound[1].setParam('all',\bus,~fb.index);
-		~sound[1].setParam('all',\reverb_amount,0.3);
-		~sound[1].setParam('all',\room_size,0.4);
-		~sound[1].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[1].setParam((i+1).asSymbol,\pan,Ndef((24+i).asSymbol));
-			~sound[1].setParam((i+1).asSymbol,\cutoff,Ndef((88+i).asSymbol));
-			~sound[1].setParam((i+1).asSymbol,\resonance,Ndef((152+i).asSymbol));
-		});
 		~note.put(33,
 			PatternProxy(Pseq(~b.rotate(1), inf)));
 		~noted.put(33,
@@ -1066,15 +1250,6 @@ s.waitForBoot({
 		~sound.put(2,
 			TriSin.new);
 		~sound[2].setParam('all',\bus,~fb.index);
-		~sound[2].setParam('all',\reverb_amount,0.3);
-		~sound[2].setParam('all',\room_size,0.4);
-		~sound[2].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[2].setParam((i+1).asSymbol,\pan,Ndef((32+i).asSymbol));
-			~sound[2].setParam((i+1).asSymbol,\cutoff,Ndef((96+i).asSymbol));
-			~sound[2].setParam((i+1).asSymbol,\resonance,Ndef((160+i).asSymbol));
-		});
 		~note.put(34,
 			PatternProxy(Pseq(~b.rotate(2), inf)));
 		~noted.put(34,
@@ -1087,7 +1262,7 @@ s.waitForBoot({
 			Tdef(\task2, {
 				var delta, voice;
 				loop {
-					delta = ~noted[34].next+1;
+					delta = (~noted[34].next+1)/2;
 					voice = ~voiceManager[2].next;
 					~sound[2].setParam(voice,\attack,1/(~noted[34].next+0.01));
 					~sound[2].setParam(voice,\release,1/(~noted[34].next+0.01));
@@ -1109,15 +1284,6 @@ s.waitForBoot({
 		~sound.put(3,
 			SinSin.new);
 		~sound[3].setParam('all',\bus,~fb.index);
-		~sound[3].setParam('all',\reverb_amount,0.3);
-		~sound[3].setParam('all',\room_size,0.4);
-		~sound[3].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[3].setParam((i+1).asSymbol,\pan,Ndef((40+i).asSymbol));
-			~sound[3].setParam((i+1).asSymbol,\cutoff,Ndef((104+i).asSymbol));
-			~sound[3].setParam((i+1).asSymbol,\resonance,Ndef((168+i).asSymbol));
-		});
 		~note.put(35,
 			PatternProxy(Pseq(~b.rotate(3), inf)));
 		~noted.put(35,
@@ -1130,7 +1296,7 @@ s.waitForBoot({
 			Tdef(\task3, {
 				var delta, voice;
 				loop {
-					delta = ~noted[35].next+1;
+					delta = (~noted[35].next+1)/2;
 					voice = ~voiceManager[3].next;
 					~sound[3].setParam(voice,\attack,1/(~noted[35].next+0.01));
 					~sound[3].setParam(voice,\release,1/(~noted[35].next+0.01));
@@ -1152,15 +1318,6 @@ s.waitForBoot({
 		~sound.put(4,
 			TriSin.new);
 		~sound[4].setParam('all',\bus,~fb.index);
-		~sound[4].setParam('all',\reverb_amount,0.3);
-		~sound[4].setParam('all',\room_size,0.4);
-		~sound[4].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[4].setParam((i+1).asSymbol,\pan,Ndef((48+i).asSymbol));
-			~sound[4].setParam((i+1).asSymbol,\cutoff,Ndef((112+i).asSymbol));
-			~sound[4].setParam((i+1).asSymbol,\resonance,Ndef((176+i).asSymbol));
-		});
 		~note.put(36,
 			PatternProxy(Pseq(~b.rotate(4), inf)));
 		~noted.put(36,
@@ -1177,7 +1334,7 @@ s.waitForBoot({
 			Tdef(\task4, {
 				var delta, voice;
 				loop {
-					delta = ~noted[36].next+1;
+					delta = (~noted[36].next+1)/2;
 					voice = ~voiceManager[4].next;
 					~sound[4].setParam(voice,\attack,~attacks[4].next);
 					~sound[4].setParam(voice,\release,~releases[4].next);
@@ -1199,15 +1356,6 @@ s.waitForBoot({
 		~sound.put(5,
 			SinSin.new);
 		~sound[5].setParam('all',\bus,~fb.index);
-		~sound[5].setParam('all',\reverb_amount,0.3);
-		~sound[5].setParam('all',\room_size,0.4);
-		~sound[5].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[5].setParam((i+1).asSymbol,\pan,Ndef((56+i).asSymbol));
-			~sound[5].setParam((i+1).asSymbol,\cutoff,Ndef((120+i).asSymbol));
-			~sound[5].setParam((i+1).asSymbol,\resonance,Ndef((184+i).asSymbol));
-		});
 		~note.put(37,
 			PatternProxy(Pseq(~b.rotate(5), inf)));
 		~noted.put(37,
@@ -1246,13 +1394,6 @@ s.waitForBoot({
 		~sound.put(6,
 			Ringer.new);
 		~sound[6].setParam('all',\bus,~fb.index);
-		~sound[6].setParam('all',\reverb_amount,0.3);
-		~sound[6].setParam('all',\room_size,0.4);
-		~sound[6].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[6].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol));
-		});
 		~note.put(38,
 			PatternProxy(Pseq(~b.rotate(6), inf)));
 		~noted.put(38,
@@ -1278,13 +1419,6 @@ s.waitForBoot({
 		~sound.put(7,
 			Ringer.new);
 		~sound[7].setParam('all',\bus,~fb.index);
-		~sound[7].setParam('all',\reverb_amount,0.3);
-		~sound[7].setParam('all',\room_size,0.4);
-		~sound[7].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[7].setParam((i+1).asSymbol,\pan,Ndef((8+i).asSymbol));
-		});
 		~note.put(39,
 			PatternProxy(Pseq(~b.rotate(7), inf)));
 		~noted.put(39,
@@ -1310,15 +1444,6 @@ s.waitForBoot({
 		~sound.put(8,
 			TriSin.new);
 		~sound[8].setParam('all',\bus,~fb.index);
-		~sound[8].setParam('all',\reverb_amount,0.3);
-		~sound[8].setParam('all',\room_size,0.4);
-		~sound[8].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[8].setParam((i+1).asSymbol,\pan,Ndef((16+i).asSymbol));
-			~sound[8].setParam((i+1).asSymbol,\cutoff,Ndef((64+i).asSymbol));
-			~sound[8].setParam((i+1).asSymbol,\resonance,Ndef((128+i).asSymbol));
-		});
 		~note.put(40,
 			PatternProxy(Pseq(~b.rotate(8), inf)));
 		~noted.put(40,
@@ -1359,15 +1484,6 @@ s.waitForBoot({
 		~sound.put(9,
 			SinSin.new);
 		~sound[9].setParam('all',\bus,~fb.index);
-		~sound[9].setParam('all',\reverb_amount,0.3);
-		~sound[9].setParam('all',\room_size,0.4);
-		~sound[9].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[9].setParam((i+1).asSymbol,\pan,Ndef((24+i).asSymbol));
-			~sound[9].setParam((i+1).asSymbol,\cutoff,Ndef((72+i).asSymbol));
-			~sound[9].setParam((i+1).asSymbol,\resonance,Ndef((136+i).asSymbol));
-		});
 		~note.put(41,
 			PatternProxy(Pseq(~b.rotate(9), inf)));
 		~noted.put(41,
@@ -1408,15 +1524,6 @@ s.waitForBoot({
 		~sound.put(10,
 			TriSin.new);
 		~sound[10].setParam('all',\bus,~fb.index);
-		~sound[10].setParam('all',\reverb_amount,0.3);
-		~sound[10].setParam('all',\room_size,0.4);
-		~sound[10].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[10].setParam((i+1).asSymbol,\pan,Ndef((32+i).asSymbol));
-			~sound[10].setParam((i+1).asSymbol,\cutoff,Ndef((80+i).asSymbol));
-			~sound[10].setParam((i+1).asSymbol,\resonance,Ndef((144+i).asSymbol));
-		});
 		~note.put(42,
 			PatternProxy(Pseq(~b.rotate(10), inf)));
 		~noted.put(42,
@@ -1457,15 +1564,6 @@ s.waitForBoot({
 		~sound.put(11,
 			TriSin.new);
 		~sound[11].setParam('all',\bus,~fb.index);
-		~sound[11].setParam('all',\reverb_amount,0.3);
-		~sound[11].setParam('all',\room_size,0.4);
-		~sound[11].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[11].setParam((i+1).asSymbol,\pan,Ndef((40+i).asSymbol));
-			~sound[11].setParam((i+1).asSymbol,\cutoff,Ndef((88+i).asSymbol));
-			~sound[11].setParam((i+1).asSymbol,\resonance,Ndef((152+i).asSymbol));
-		});
 		~note.put(43,
 			PatternProxy(Pseq(~b.rotate(11), inf)));
 		~noted.put(43,
@@ -1506,13 +1604,6 @@ s.waitForBoot({
 		~sound.put(12,
 			Ringer.new);
 		~sound[12].setParam('all',\bus,~fb.index);
-		~sound[12].setParam('all',\reverb_amount,0.3);
-		~sound[12].setParam('all',\room_size,0.4);
-		~sound[12].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[12].setParam((i+1).asSymbol,\pan,Ndef((48+i).asSymbol));
-		});
 		~note.put(44,
 			PatternProxy(Pseq(~b.rotate(12), inf)));
 		~noted.put(44,
@@ -1540,13 +1631,6 @@ s.waitForBoot({
 		~sound.put(13,
 			Ringer.new);
 		~sound[13].setParam('all',\bus,~fb.index);
-		~sound[13].setParam('all',\reverb_amount,0.3);
-		~sound[13].setParam('all',\room_size,0.4);
-		~sound[13].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[13].setParam((i+1).asSymbol,\pan,Ndef((56+i).asSymbol));
-		});
 		~note.put(45,
 			PatternProxy(Pseq(~b.rotate(13), inf)));
 		~noted.put(45,
@@ -1574,13 +1658,6 @@ s.waitForBoot({
 		~sound.put(14,
 			Ringer.new);
 		~sound[14].setParam('all',\bus,~fb.index);
-		~sound[14].setParam('all',\reverb_amount,0.3);
-		~sound[14].setParam('all',\room_size,0.4);
-		~sound[14].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[14].setParam((i+1).asSymbol,\pan,Ndef(i.asSymbol));
-		});
 		~note.put(46,
 			PatternProxy(Pseq(~b.rotate(14), inf)));
 		~noted.put(46,
@@ -1608,13 +1685,6 @@ s.waitForBoot({
 		~sound.put(15,
 			Ringer.new);
 		~sound[15].setParam('all',\bus,~fb.index);
-		~sound[15].setParam('all',\reverb_amount,0.3);
-		~sound[15].setParam('all',\room_size,0.4);
-		~sound[15].setParam('all',\damp,0.5);
-		8.do({
-			arg i;
-			~sound[15].setParam((i+1).asSymbol,\pan,Ndef((8+i).asSymbol));
-		});
 		~note.put(47,
 			PatternProxy(Pseq(~b.rotate(15), inf)));
 		~noted.put(47,
@@ -2631,96 +2701,30 @@ s.waitForBoot({
 	);
 
 	(
-		~sound.put(29,
-			OneShot.new);
-		~durs.put(29,
-			PatternProxy(Pseq([1.5], inf)).asStream);
-		~bufs.put(13,
-			PatternProxy(Pseq([d[\zk][1]], inf)).asStream);
-		~rates.put(13,
-			PatternProxy(Pseq([1], inf)).asStream);
-		~amps.put(13,
-			PatternProxy(Pseq([1], inf)).asStream);
 		~a.put(125,
 			Tdef(\task61, {
-				var delta, voice;
-				loop {
-					delta = ~durs[29].next;
-					voice = ~voiceManager[29].next;
-					~sound[29].setParam(voice,\rate,~rates[13].next);
-					~sound[29].setParam(voice,\amp,~amps[13].next*~idim[61]);
-					~sound[29].setParam(voice,\cutoff,~dimi[61].linexp(0,1,500,15000));
-					~sound[29].setParam(voice,\reverb_amount, 0);
-					~sound[29].setParam(voice,\bus,~fb.index);
-					~sound[29].trigger(voice,~bufs[13].next);
-					delta.yield;
-				}
-			}).clock_(~timer).quant_(4)
+			})
 		)
 	);
 
 	(
-		~sound.put(30,
-			OneShot.new);
-		~durs.put(30,
-			PatternProxy(Pseq([1/3], inf)).asStream);
-		~bufs.put(14,
-			PatternProxy(Prand(d[\zm], inf)).asStream);
-		~rates.put(14,
-			PatternProxy(Pseq([1], inf)).asStream);
-		~amps.put(14,
-			PatternProxy(Pseq([0], inf)).asStream);
 		~a.put(126,
 			Tdef(\task62, {
-				var delta, voice;
-				loop {
-					delta = ~durs[30].next;
-					voice = ~voiceManager[30].next;
-					~sound[30].setParam(voice,\rate,~rates[14].next);
-					~sound[30].setParam(voice,\amp,~amps[14].next*~idim[62]);
-					~sound[30].setParam(voice,\cutoff,~dimi[62].linexp(0,1,500,15000));
-					~sound[30].setParam(voice,\reverb_amount, 0);
-					~sound[30].setParam(voice,\bus,~fb.index);
-					~sound[30].trigger(voice,~bufs[14].next);
-					delta.yield;
-				}
-			}).clock_(~timer).quant_(4)
+			})
 		)
 	);
 
 	(
-		~sound.put(31,
-			OneShot.new);
-		~durs.put(31,
-			PatternProxy(Pseq([1/3], inf)).asStream);
-		~bufs.put(15,
-			PatternProxy(Prand(d[\zp], inf)).asStream);
-		~rates.put(15,
-			PatternProxy(Pseq([1], inf)).asStream);
-		~amps.put(15,
-			PatternProxy(Pseq([0], inf)).asStream);
 		~a.put(127,
 			Tdef(\task63, {
-				var delta, voice;
-				loop {
-					delta = ~durs[31].next;
-					voice = ~voiceManager[31].next;
-					~sound[31].setParam(voice,\rate,~rates[15].next);
-					~sound[31].setParam(voice,\amp,~amps[15].next*~idim[63]);
-					~sound[31].setParam(voice,\cutoff,~dimi[63].linexp(0,1,500,15000));
-					~sound[31].setParam(voice,\reverb_amount, 0);
-					~sound[31].setParam(voice,\bus,~fb.index);
-					~sound[31].trigger(voice,~bufs[15].next);
-					delta.yield;
-				}
-			}).clock_(~timer).quant_(4)
+			})
 		)
 	);
 
 	~rates.put(16,[1/4,1/2,1,3/2,2].scramble);
-	~durs.put(7,5.collect({arg i; ~timer.beatDur*(i+1)}).scramble);
-	~delays = 5.collect({arg i; s.sampleRate*(~timer.beatDur*(i+1))*16}).scramble;
-	~g = 5.collect({
+	~durs.put(7,15.collect({arg i; ~timer.beatDur*(i+1)*4}).scramble);
+	~delays = 15.collect({arg i; s.sampleRate*(~timer.beatDur*(i+1))*8}).scramble;
+	~g = 15.collect({
 		arg n;
 		Synth(\gran, [
 			\amp, 0,
@@ -2730,10 +2734,10 @@ s.waitForBoot({
 			\rel, 1,
 			\gate, 1,
 			\sync, 1,
-			\dens, 1/(~durs[7][n]*~rates[16][n]),
+			\dens, 1/(~durs[7][n]*~rates[16][n%5]),
 			\baseDur, ~durs[7][n],
 			\durRand, 1,
-			\rate, ~rates[16][n],
+			\rate, ~rates[16][n%5],
 			\rateRand, 1,
 			\pan, Ndef(n.asSymbol),
 			\panRand, 0,
@@ -2742,43 +2746,18 @@ s.waitForBoot({
 			\ptrSampleDelay, ~delays[n],
 			\ptrRandSamples, s.sampleRate*(~timer.beatDur*((n%8)+1))*2,
 			\minPtrDelay, ~delays[n],
-			\cutoff, Ndef((n+64).asSymbol),
-			\resonance, Ndef((n+128).asSymbol)
+			\cutoff, Ndef((n+16).asSymbol),
+			\resonance, Ndef((n+32).asSymbol)
 		], ~granGrp;
 		)
 	});
-	Tdef(\task64, {
-		var delta;
-		loop {
-			delta = 1/16;
-			if(
-				~step[126] == 0,
-				{
-					~delMic.set(\amp, 0)
-				},
-				{
-					~delMic.set(\amp, 1)
-				}
-			);
-			delta.yield;
-		}
-	}).clock_(~timer).quant_(4).play;
-	Tdef(\task65, {
-		var delta;
-		loop {
-			delta = 1/16;
-			if(
-				~step[127] == 0,
-				{5.do({
-					arg i;
-					~g[i].set(\amp, 0)
-				})},
-				{5.do({
-					arg i;
-					~g[i].set(\amp, 1)
-				})}
-			);
-			delta.yield;
-		}
-	}).clock_(~timer).quant_(4).play;
+	29.do({
+		arg i;
+		8.do({
+			arg j;
+			~sound[i].setParam((j+1).asSymbol,\pan,Ndef(rrand(0,15).asSymbol));
+			~sound[i].setParam((j+1).asSymbol,\cutoff,Ndef(rrand(16,31).asSymbol));
+			~sound[i].setParam((j+1).asSymbol,\resonance,Ndef(rrand(32,48).asSymbol));
+		})
+	});
 }))
