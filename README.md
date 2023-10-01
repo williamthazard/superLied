@@ -1,9 +1,11 @@
 # superLied
 
-Lied script for SuperCollider. <br>
+Lied script for SuperCollider. Turns text into music. <br>
 <br>
 “What is a poet? A poet is an unhappy being whose heart is torn by secret sufferings, but whose lips are so strangely formed that when the sighs and the cries escape them, they sound like beautiful music.”
 -Søren Kierkegaard, *Either/Or*
+<br><br>
+Enter text using the text field at the bottom of the screen.
 <br><br>
 The grid of buttons works this way:<br>
 <b>Row 1</b>: recall lines you've typed from history<br>
