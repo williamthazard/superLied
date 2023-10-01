@@ -1,6 +1,6 @@
 # superLied
 
-WIP Lied script for SuperCollider. <br>
+Lied script for SuperCollider. <br>
 <br>
 The grid of buttons works this way:<br>
 <b>Row 1</b>: recall lines you've typed from history<br>
