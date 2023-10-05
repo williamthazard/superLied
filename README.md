@@ -21,7 +21,7 @@ The grid of buttons (either on the screen or a connected monome grid) works this
 <br>
 <b>secret buttons</b>: the last 3 buttons in row 8 deal with input audio. The third button from the right turns audio send to Carter's Delay on or off. The second button from the right turns playback from Carter's Delay on or off. The button furthest to the right turns the clean mic signal to your audio output on or off.
 <br><br>
-The knobs correspond roughly to the synths and samplers on the grid. 128 knobs, 128 buttons. Play around with them. See what happens.
+The knobs (either on the screen or a connected midi fighter twister) correspond roughly to the synths and samplers on the grid. 128 knobs, 128 buttons. Play around with them. See what happens.
 <br><br>
 The "samples" folder should be saved in the same place as the main superLied.scd file.
 <br><br>
