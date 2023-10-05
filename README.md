@@ -5,6 +5,8 @@ Lied script for SuperCollider. Turns text into music. <br>
 “What is a poet? A poet is an unhappy being whose heart is torn by secret sufferings, but whose lips are so strangely formed that when the sighs and the cries escape them, they sound like beautiful music.”
 -Søren Kierkegaard, *Either/Or*
 <br><br>
+video documentation available [here](https://youtu.be/kIbWiqHrXFw?si=124TkcGh1n1A5yD1)
+<br><br>
 Enter text using the text field at the bottom of the screen. Text you enter will be added to history, which appears immediately above the text entry field, on the left side of the screen.
 <br><br>
 The grid of buttons (either on the screen or a connected [monome](https://monome.org) [grid](https://monome.org/docs/grid/) using the [monomeSC](https://github.com/monome/monomeSC) library) works this way:<br>
