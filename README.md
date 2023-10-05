@@ -15,7 +15,7 @@ The grid of buttons works this way:<br>
 <b>Row 5</b>: apply the active line (either the most-recently-entered one or the one you've recalled with row 1) to the sample cutter/speed slot immediately above<br>
 <b>Row 6</b>: mirrors row 3 (more samplers)<br>
 <b>Row 7</b>: mirrors row 4 (sends lines to samplers in row 6)<br>
-<b>Row 8</b>: toggle sample playback. These samples play in their entirety and are unaffected by the active line (works nicely for drums)
+<b>Row 8</b>: toggle sample playback. These samples play in their entirety and are unaffected by the active line (works nicely for drums) – except for the `~secret buttons~`, that is
 <br>
 ![](sLgriDoc.png)
 <br>
