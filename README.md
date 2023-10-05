@@ -17,7 +17,7 @@ The grid of buttons works this way:<br>
 <b>Row 7</b>: mirrors row 4 (sends lines to samplers in row 6)<br>
 <b>Row 8</b>: toggle sample playback. These samples play in their entirety and are unaffected by the active line (works nicely for drums)<br>
 <br>
-[![](superLied grid doc image.png)]
+![](superLied grid doc image.png)
 <b>secret buttons</b>: the last 3 buttons in row 8 deal with input audio. The third button from the right turns audio send to Carter's Delay on or off. The second button from the right turns playback from Carter's Delay on or off. The button furthest to the right turns the clean mic signal to your audio output on or off.
 <br><br>
 The knobs correspond roughly to the synths and samplers on the grid. 128 knobs, 128 buttons. Play around with them. See what happens.
