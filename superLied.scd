@@ -3,11 +3,11 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(21));
-o.outDevice_("Scarlett 4i4 USB");
+o.outDevice_("External Headphones");
 o.inDevice_("Scarlett 4i4 USB");
 s.latency_(0.5);
 //o.numInputBusChannels_(0);
-//ServerOptions.devices;
+ServerOptions.devices;
 
 //tempo
 ~timer = TempoClock.new(128/60);
@@ -2327,7 +2327,7 @@ s.waitForBoot({
 		~sound.put(16,
 			OneShot.new);
 		~durs.put(16,
-			PatternProxy(Pseq([1/4],inf)).asStream);
+			PatternProxy(Pseq([1],inf)).asStream);
 		~bufs.put(0,
 			PatternProxy(Pseq([d[\l][1], d[\m][3], d[\h][1]], inf)).asStream);
 		~rates.put(0,
@@ -2348,7 +2348,7 @@ s.waitForBoot({
 					~sound[16].trigger(voice,~bufs[0].next);
 					delta.yield;
 				}
-			}).clock_(~timer).quant_(4)
+			}).clock_(~timer).quant_(4,1)
 		)
 	);
 
@@ -2385,7 +2385,7 @@ s.waitForBoot({
 		~sound.put(18,
 			OneShot.new);
 		~durs.put(18,
-			PatternProxy(Pseq([1/4, 1/4, 6/4, 1/3, 1/3, 4/3, 1/4, 1/4, 6/4, 1/3, 1/3, 1/3, 1/3, 2/3], inf)).asStream);
+			PatternProxy(Pseq([1/2, 1/2, 3, 2/3, 2/3, 8/3, 1/2, 1/2, 3, 2/3, 2/3, 2/3, 2/3, 4/3], inf)).asStream);
 		~bufs.put(2,
 			PatternProxy(Prand(d[\zm], inf)).asStream);
 		~rates.put(2,
@@ -2472,7 +2472,7 @@ s.waitForBoot({
 		~sound.put(21,
 			OneShot.new);
 		~durs.put(21,
-			PatternProxy(Pseq([1/4, 1/4, 1/4, 3/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4], inf)).asStream);
+			PatternProxy(Pseq([1/2, 1/2, 1/2, 2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1/2, 1], inf)).asStream);
 		~bufs.put(5,
 			PatternProxy(Pseq([d[\l][1], d[\m][3], d[\h][1]], inf)).asStream);
 		~rates.put(5,
@@ -2646,9 +2646,9 @@ s.waitForBoot({
 		~sound.put(27,
 			OneShot.new);
 		~durs.put(27,
-			PatternProxy(Pseq([1], inf)).asStream);
+			PatternProxy(Pseq([1.5], inf)).asStream);
 		~bufs.put(11,
-			PatternProxy(Pseq([d[\zk][1], d[\zs][0]], inf)).asStream);
+			PatternProxy(Pseq([d[\zs][0]], inf)).asStream);
 		~rates.put(11,
 			PatternProxy(Pseq([1], inf)).asStream);
 		~amps.put(11,
@@ -2700,6 +2700,7 @@ s.waitForBoot({
 		)
 	);
 
+	//a few empty tasks so our grid doesn't get confused about the secret buttons
 	(
 		~a.put(125,
 			Tdef(\task61, {
@@ -2721,6 +2722,7 @@ s.waitForBoot({
 		)
 	);
 
+	//Carter's Delay
 	~rates.put(16,[1/4,1/2,1,3/2,2].scramble);
 	~durs.put(7,15.collect({arg i; ~timer.beatDur*(i+1)*4}).scramble);
 	~delays = 15.collect({arg i; s.sampleRate*(~timer.beatDur*(i+1))*8}).scramble;
@@ -2751,7 +2753,7 @@ s.waitForBoot({
 		], ~granGrp;
 		)
 	});
-	29.do({
+	16.do({
 		arg i;
 		8.do({
 			arg j;
