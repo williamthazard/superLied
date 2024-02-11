@@ -3,8 +3,8 @@
 Server.default = Server.local;
 o = Server.default.options;
 o.memSize_(2.pow(21));
-o.outDevice_("External Headphones");
-o.inDevice_("Scarlett 4i4 USB");
+o.outDevice_("MacBook Pro Speakers");
+o.inDevice_("MacBook Pro Microphone");
 s.latency_(0.5);
 //o.numInputBusChannels_(0);
 ServerOptions.devices;
